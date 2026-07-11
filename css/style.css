@@ -1,0 +1,1755 @@
+/* ==========================================================================
+   WHAT'S FOR DINNER — Premium Meal Planning App
+   Dark-mode-first · Glassmorphism · 3-step Wizard
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. DESIGN TOKENS (Custom Properties)
+   -------------------------------------------------------------------------- */
+:root {
+  /* Backgrounds */
+  --bg-primary: hsl(230, 25%, 8%);
+  --bg-secondary: hsl(230, 22%, 12%);
+  --bg-card: hsla(230, 20%, 14%, 0.65);
+  --bg-card-hover: hsla(230, 20%, 18%, 0.75);
+
+  /* Accents */
+  --accent-gradient: linear-gradient(135deg, hsl(340, 85%, 55%), hsl(30, 95%, 55%));
+  --accent-primary: hsl(340, 85%, 55%);
+  --accent-secondary: hsl(30, 95%, 55%);
+  --accent-success: hsl(160, 70%, 45%);
+
+  /* Text */
+  --text-primary: hsl(0, 0%, 95%);
+  --text-secondary: hsl(230, 15%, 70%);
+  --text-muted: hsl(230, 15%, 45%);
+
+  /* Borders */
+  --border-subtle: hsla(230, 20%, 30%, 0.4);
+
+  /* Radii */
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-glow: 0 0 30px hsla(340, 85%, 55%, 0.15);
+
+  /* Typography */
+  --font: 'Outfit', sans-serif;
+
+  /* Transitions */
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
+
+  /* Meal-type accent colours */
+  --meal-breakfast: hsl(40, 90%, 55%);
+  --meal-lunch: hsl(160, 70%, 45%);
+  --meal-dinner: hsl(270, 65%, 55%);
+}
+
+/* --------------------------------------------------------------------------
+   2. RESET & BASE
+   -------------------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Subtle ambient gradient blobs behind content */
+body::before,
+body::after {
+  content: '';
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(120px);
+  opacity: 0.35;
+}
+
+body::before {
+  width: 600px;
+  height: 600px;
+  background: hsla(340, 85%, 55%, 0.12);
+  top: -10%;
+  left: -8%;
+}
+
+body::after {
+  width: 500px;
+  height: 500px;
+  background: hsla(30, 95%, 55%, 0.10);
+  bottom: -10%;
+  right: -8%;
+}
+
+a {
+  color: var(--accent-primary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--accent-secondary);
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+ul, ol {
+  list-style: none;
+}
+
+button {
+  font-family: var(--font);
+  cursor: pointer;
+  border: none;
+  outline: none;
+  background: none;
+  color: inherit;
+}
+
+input, textarea, select {
+  font-family: var(--font);
+  color: var(--text-primary);
+  background: transparent;
+  border: none;
+  outline: none;
+}
+
+/* --------------------------------------------------------------------------
+   3. SCROLLBAR
+   -------------------------------------------------------------------------- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsla(230, 20%, 14%, 0.4);
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsla(340, 85%, 55%, 0.35);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsla(340, 85%, 55%, 0.55);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsla(340, 85%, 55%, 0.35) hsla(230, 20%, 14%, 0.4);
+}
+
+/* --------------------------------------------------------------------------
+   4. HEADER
+   -------------------------------------------------------------------------- */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: hsla(230, 25%, 8%, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 1.25rem 2rem;
+  text-align: center;
+}
+
+.header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.logo-icon {
+  font-size: 1.75rem;
+}
+
+.logo-text {
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.tagline {
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--text-secondary);
+  margin-top: 0.15rem;
+  letter-spacing: 0.04em;
+}
+
+/* --------------------------------------------------------------------------
+   5. PROGRESS STEPPER
+   -------------------------------------------------------------------------- */
+.stepper {
+  padding: 1.5rem 1rem 2rem;
+  max-width: 640px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.stepper-inner {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+/* Connecting line behind the circles */
+.stepper-line {
+  position: absolute;
+  top: 22px;
+  left: 15%;
+  right: 15%;
+  height: 3px;
+  background: var(--border-subtle);
+  border-radius: var(--radius-full);
+  z-index: 0;
+}
+
+.stepper-line-fill {
+  height: 100%;
+  background: var(--accent-gradient);
+  border-radius: var(--radius-full);
+  transition: width var(--transition-slow);
+  width: 0%;
+}
+
+.stepper-steps {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+.stepper-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.step-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
+  border: 2px solid var(--border-subtle);
+  background: var(--bg-secondary);
+  color: var(--text-muted);
+  transition: all var(--transition-normal);
+}
+
+.step-label {
+  margin-top: 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-align: center;
+  transition: color var(--transition-normal);
+  white-space: nowrap;
+}
+
+/* Active step */
+.stepper-step.active .step-circle {
+  background: var(--accent-gradient);
+  border-color: transparent;
+  color: #fff;
+  transform: scale(1.15);
+  box-shadow: var(--shadow-glow);
+  animation: glowPulse 2.5s ease-in-out infinite;
+}
+
+.stepper-step.active .step-label {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* Completed step */
+.stepper-step.completed .step-circle {
+  background: var(--accent-primary);
+  border-color: transparent;
+  color: #fff;
+  font-size: 0;
+}
+
+.stepper-step.completed .step-circle::after {
+  content: '✓';
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.stepper-step.completed .step-label {
+  color: var(--text-secondary);
+}
+
+/* --------------------------------------------------------------------------
+   6. MAIN CONTENT AREA
+   -------------------------------------------------------------------------- */
+.app-main {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem 1.5rem 7rem;
+  min-height: 50vh;
+}
+
+/* Screen transition animations */
+.app-main.screen-enter {
+  animation: fadeSlideIn 0.4s ease both;
+}
+
+.app-main.screen-exit {
+  animation: fadeSlideOut 0.25s ease both;
+}
+
+/* --------------------------------------------------------------------------
+   7. SCREEN HEADER (each wizard step)
+   -------------------------------------------------------------------------- */
+.screen-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.screen-title {
+  font-size: 1.85rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-bottom: 0.35rem;
+}
+
+.screen-subtitle {
+  font-size: 1rem;
+  color: var(--text-secondary);
+}
+
+/* --------------------------------------------------------------------------
+   8. INPUT METHOD CARDS (Step 1 — choose how to add groceries)
+   -------------------------------------------------------------------------- */
+.input-method-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.input-method-card {
+  position: relative;
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 2rem 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    transform var(--transition-normal),
+    background var(--transition-normal),
+    border-color var(--transition-normal),
+    box-shadow var(--transition-normal);
+  overflow: hidden;
+}
+
+.input-method-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+  background: var(--accent-gradient);
+  z-index: 0;
+}
+
+.input-method-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.input-method-card:hover {
+  transform: translateY(-4px);
+  background: var(--bg-card-hover);
+  border-color: hsla(340, 85%, 55%, 0.25);
+  box-shadow: 0 8px 32px hsla(340, 85%, 55%, 0.08);
+}
+
+.input-method-card.active {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 24px hsla(340, 85%, 55%, 0.2), inset 0 0 0 1px var(--accent-primary);
+}
+
+.input-method-card.active::before {
+  opacity: 0.06;
+}
+
+.method-icon {
+  margin-bottom: 1rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.input-method-card.active .method-icon {
+  color: var(--accent-primary);
+}
+
+.method-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+  color: var(--text-primary);
+}
+
+.method-desc {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* --------------------------------------------------------------------------
+   9. GROCERY INPUT — MANUAL
+   -------------------------------------------------------------------------- */
+.manual-input-wrapper {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.search-input-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  position: relative;
+}
+
+.search-icon {
+  position: absolute;
+  left: 1.25rem;
+  color: var(--text-muted);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.search-input {
+  flex: 1;
+  padding: 0.9rem 1.25rem 0.9rem 3.25rem;
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.search-input:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px hsla(340, 85%, 55%, 0.12);
+}
+
+.btn-add {
+  padding: 0.75rem 1.25rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Autocomplete dropdown */
+.autocomplete-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 80px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  z-index: 50;
+  max-height: 240px;
+  overflow-y: auto;
+  box-shadow: 0 12px 40px hsla(0, 0%, 0%, 0.3);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.autocomplete-option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.7rem 1.25rem;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  border: none;
+  background: none;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.autocomplete-option:hover {
+  background: hsla(340, 85%, 55%, 0.1);
+}
+
+.autocomplete-option + .autocomplete-option {
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* Quick-add suggestion chips */
+.quick-suggestions {
+  margin-top: 1.25rem;
+}
+
+.suggestion-label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.suggestion-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.suggestion-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.4rem 0.85rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    opacity var(--transition-fast);
+}
+
+.suggestion-chip:hover:not(.added) {
+  background: hsla(340, 85%, 55%, 0.1);
+  border-color: var(--accent-primary);
+  color: var(--text-primary);
+}
+
+.suggestion-chip.added {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* --------------------------------------------------------------------------
+   10. GROCERY LIST (chips display)
+   -------------------------------------------------------------------------- */
+.grocery-section {
+  margin-top: 1.5rem;
+}
+
+.grocery-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.grocery-count {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.grocery-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.grocery-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.9rem;
+  background: var(--accent-gradient);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border-radius: var(--radius-full);
+  transition: transform var(--transition-fast), opacity var(--transition-fast);
+  animation: fadeSlideIn 0.25s ease both;
+}
+
+.grocery-chip:hover {
+  transform: scale(1.05);
+}
+
+.chip-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: hsla(0, 0%, 100%, 0.25);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  border: none;
+  color: #fff;
+  padding: 0;
+}
+
+.chip-remove:hover {
+  background: hsla(0, 0%, 100%, 0.5);
+}
+
+.grocery-empty {
+  text-align: center;
+  padding: 2rem;
+}
+
+.empty-text {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+/* --------------------------------------------------------------------------
+   11. OCR SCANNER / FILE UPLOAD
+   -------------------------------------------------------------------------- */
+.scan-input-wrapper,
+.upload-input-wrapper {
+  margin-top: 0.5rem;
+}
+
+/* Dropzone */
+.dropzone {
+  border: 2px dashed var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 3rem 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    border-color var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.dropzone:hover,
+.dropzone.dragover {
+  border-color: var(--accent-primary);
+  background: hsla(340, 85%, 55%, 0.04);
+}
+
+.dropzone-icon {
+  margin: 0 auto 0.75rem;
+  opacity: 0.6;
+  color: var(--text-secondary);
+}
+
+.dropzone-text {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.3rem;
+}
+
+.dropzone-hint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* OCR Progress */
+.ocr-progress {
+  margin-top: 1.5rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+.progress-bar-track {
+  width: 100%;
+  height: 8px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 0.75rem;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--accent-gradient);
+  border-radius: var(--radius-full);
+  transition: width var(--transition-normal);
+  width: 0%;
+  position: relative;
+}
+
+.progress-bar-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    hsla(0, 0%, 100%, 0.3) 50%,
+    transparent 100%
+  );
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+
+.progress-text {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+/* OCR / Upload Results */
+.results-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.results-hint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.results-list {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 1.25rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.ocr-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-subtle);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.ocr-item:hover {
+  background: hsla(230, 20%, 18%, 0.4);
+}
+
+.ocr-item:last-child {
+  border-bottom: none;
+}
+
+.ocr-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-subtle);
+  border-radius: 4px;
+  cursor: pointer;
+  position: relative;
+  flex-shrink: 0;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.ocr-checkbox:checked {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+}
+
+.ocr-checkbox:checked::after {
+  content: '✓';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.ocr-item-name {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.no-results {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+/* --------------------------------------------------------------------------
+   12. CUISINE CARDS (Step 2)
+   -------------------------------------------------------------------------- */
+.cuisine-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+}
+
+.cuisine-card {
+  position: relative;
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem 1.25rem;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    transform var(--transition-normal),
+    background var(--transition-normal),
+    border-color var(--transition-normal),
+    box-shadow var(--transition-normal);
+  overflow: hidden;
+}
+
+.cuisine-card:hover {
+  transform: scale(1.03);
+  background: var(--bg-card-hover);
+  box-shadow: 0 12px 40px hsla(0, 0%, 0%, 0.25);
+}
+
+.cuisine-card.selected {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 20px hsla(340, 85%, 55%, 0.18);
+}
+
+/* Checkmark badge overlay on selected */
+.cuisine-check {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 26px;
+  height: 26px;
+  background: var(--accent-gradient);
+  color: #fff;
+  border-radius: 50%;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  animation: fadeSlideIn 0.25s ease both;
+}
+
+.cuisine-card.selected .cuisine-check {
+  display: flex;
+}
+
+.cuisine-emoji {
+  font-size: 2.75rem;
+  margin-bottom: 0.75rem;
+  display: block;
+}
+
+.cuisine-name {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.3rem;
+}
+
+.cuisine-desc,
+.cuisine-description {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+/* Cuisine picker header (aliases screen-header for Step 2) */
+.cuisine-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.cuisine-title {
+  font-size: 1.85rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-bottom: 0.35rem;
+}
+
+.cuisine-subtitle {
+  font-size: 1rem;
+  color: var(--text-secondary);
+}
+
+.cuisine-selection-count,
+.cuisine-count {
+  text-align: center;
+  margin-top: 1.25rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.select-all-btn,
+.cuisine-toggle-all {
+  display: block;
+  margin: 0 auto 1.25rem;
+  padding: 0.5rem 1.25rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  background: none;
+}
+
+.select-all-btn:hover,
+.cuisine-toggle-all:hover {
+  border-color: var(--accent-primary);
+  color: var(--text-primary);
+  background: hsla(340, 85%, 55%, 0.06);
+}
+
+.cuisine-warning {
+  text-align: center;
+  color: var(--accent-secondary);
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-top: 0.75rem;
+  animation: fadeSlideIn 0.3s ease both;
+}
+
+/* --------------------------------------------------------------------------
+   13. MEAL PLAN (Step 3)
+   -------------------------------------------------------------------------- */
+.plan-action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.plan-stats {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.stat-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.85rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.stat-badge svg {
+  color: var(--accent-primary);
+}
+
+.plan-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.meal-plan-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1rem;
+  overflow-x: auto;
+  padding-bottom: 1rem;
+}
+
+.day-column {
+  min-width: 155px;
+}
+
+.day-header {
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+  margin-bottom: 0.75rem;
+  text-align: center;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--border-subtle);
+}
+
+.day-short {
+  display: none;
+}
+
+/* Individual meal card */
+.meal-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+  transition:
+    transform var(--transition-normal),
+    box-shadow var(--transition-normal);
+}
+
+.meal-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px hsla(0, 0%, 0%, 0.2);
+}
+
+/* Meal type badge */
+.meal-type-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #fff;
+}
+
+.meal-icon {
+  font-size: 0.8rem;
+}
+
+.meal-label {
+  font-size: 0.65rem;
+}
+
+.meal-content {
+  padding: 0.75rem;
+}
+
+.meal-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.3rem;
+  line-height: 1.3;
+}
+
+.meal-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.meal-cuisine {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: hsla(230, 20%, 20%, 0.6);
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-full);
+}
+
+.meal-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.meal-description {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin-bottom: 0.5rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Ingredient match bar */
+.meal-match-bar {
+  width: 100%;
+  height: 4px;
+  background: hsla(230, 20%, 20%, 0.6);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-bottom: 0.3rem;
+}
+
+.match-fill {
+  height: 100%;
+  background: var(--accent-success);
+  border-radius: var(--radius-full);
+  transition: width var(--transition-normal);
+}
+
+.match-text {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  margin-bottom: 0.4rem;
+}
+
+.meal-ingredients {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.ingredient {
+  font-size: 0.65rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--radius-sm);
+}
+
+.ingredient.matched {
+  color: var(--accent-success);
+  background: hsla(160, 70%, 45%, 0.1);
+}
+
+.ingredient.missing {
+  color: var(--text-muted);
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+/* Legend */
+.plan-legend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+/* --------------------------------------------------------------------------
+   14. BUTTONS
+   -------------------------------------------------------------------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.75rem;
+  border-radius: var(--radius-full);
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition:
+    transform var(--transition-fast),
+    filter var(--transition-fast),
+    background var(--transition-fast),
+    box-shadow var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  border: none;
+}
+
+.btn:active {
+  transform: scale(0.96);
+}
+
+/* Primary — accent gradient */
+.btn-primary {
+  background: var(--accent-gradient);
+  color: #fff;
+  border: none;
+  box-shadow: 0 4px 16px hsla(340, 85%, 55%, 0.2);
+}
+
+.btn-primary:hover {
+  filter: brightness(1.12);
+  box-shadow: 0 6px 24px hsla(340, 85%, 55%, 0.3);
+}
+
+/* Secondary — outlined */
+.btn-secondary {
+  background: transparent;
+  color: var(--accent-primary);
+  border: 1.5px solid var(--accent-primary);
+}
+
+.btn-secondary:hover {
+  background: hsla(340, 85%, 55%, 0.1);
+  border-color: var(--accent-secondary);
+  color: var(--accent-secondary);
+}
+
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.8rem;
+}
+
+/* Spinning regenerate icon */
+.regenerate-icon.spinning {
+  animation: spin 0.6s ease;
+}
+
+/* --------------------------------------------------------------------------
+   15. NAVIGATION FOOTER
+   -------------------------------------------------------------------------- */
+.app-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: hsla(230, 25%, 8%, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border-subtle);
+  padding: 1rem 2rem;
+}
+
+.nav-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.app-nav.minimal .nav-inner {
+  justify-content: flex-start;
+}
+
+/* --------------------------------------------------------------------------
+   16. TOAST NOTIFICATIONS
+   -------------------------------------------------------------------------- */
+.toast {
+  position: fixed;
+  bottom: 6rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  box-shadow: 0 8px 32px hsla(0, 0%, 0%, 0.3);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  opacity: 0;
+  transition: all var(--transition-normal);
+  pointer-events: none;
+}
+
+.toast-visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+
+.toast-warning {
+  border-color: hsla(30, 95%, 55%, 0.3);
+}
+
+.toast-error {
+  border-color: hsla(0, 70%, 50%, 0.3);
+}
+
+.toast-success {
+  border-color: hsla(160, 70%, 45%, 0.3);
+}
+
+.toast-icon {
+  font-size: 1rem;
+}
+
+.toast-message {
+  font-size: 0.85rem;
+}
+
+/* --------------------------------------------------------------------------
+   17. KEYFRAME ANIMATIONS
+   -------------------------------------------------------------------------- */
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeSlideOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+@keyframes glowPulse {
+  0%, 100% {
+    box-shadow: 0 0 20px hsla(340, 85%, 55%, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 36px hsla(340, 85%, 55%, 0.3);
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+/* .fade-slide-in class for JS-driven entrance */
+.fade-slide-in {
+  animation: fadeSlideIn 0.4s ease both;
+}
+
+/* Shake animation for validation errors */
+.shake {
+  animation: shake 0.4s ease;
+}
+
+/* --------------------------------------------------------------------------
+   18. RESPONSIVE — TABLET (≤1024px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 1024px) {
+  .cuisine-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .meal-plan-grid {
+    grid-template-columns: repeat(7, minmax(150px, 1fr));
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .day-column {
+    scroll-snap-align: start;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   19. RESPONSIVE — MOBILE (≤768px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  .app-header {
+    padding: 1rem 1.25rem;
+  }
+
+  .logo-text {
+    font-size: 1.35rem;
+  }
+
+  .app-main {
+    padding: 1.25rem 1rem 5.5rem;
+  }
+
+  .stepper {
+    padding: 1.25rem 0.5rem 1.75rem;
+  }
+
+  .step-circle {
+    width: 36px;
+    height: 36px;
+    font-size: 0.85rem;
+  }
+
+  .step-label {
+    font-size: 0.65rem;
+  }
+
+  .screen-title {
+    font-size: 1.35rem;
+  }
+
+  .screen-subtitle {
+    font-size: 0.9rem;
+  }
+
+  /* Input method cards → single column */
+  .input-method-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .input-method-card {
+    padding: 1.25rem 1rem;
+    display: flex;
+    align-items: center;
+    text-align: left;
+    gap: 1rem;
+  }
+
+  .method-icon {
+    margin-bottom: 0;
+    flex-shrink: 0;
+  }
+
+  /* Cuisine grid → 2 columns */
+  .cuisine-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .cuisine-card {
+    padding: 1.25rem 1rem;
+  }
+
+  .cuisine-emoji {
+    font-size: 2.25rem;
+  }
+
+  /* Meal plan → horizontal scroll */
+  .meal-plan-grid {
+    grid-template-columns: repeat(7, minmax(140px, 1fr));
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    gap: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+
+  .day-column {
+    min-width: 140px;
+    scroll-snap-align: start;
+  }
+
+  /* Show short day names, hide full names */
+  .day-name {
+    display: none;
+  }
+
+  .day-short {
+    display: inline;
+  }
+
+  /* Nav footer — stack buttons on small screens */
+  .app-nav {
+    padding: 0.75rem 1rem;
+  }
+
+  .nav-inner {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .plan-action-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .plan-actions {
+    justify-content: center;
+  }
+
+  /* Search input group */
+  .search-input-group {
+    flex-direction: column;
+  }
+
+  .btn-add {
+    width: 100%;
+  }
+
+  .autocomplete-dropdown {
+    right: 0;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   20. RESPONSIVE — SMALL MOBILE (≤480px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 480px) {
+  .cuisine-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+  }
+
+  .cuisine-desc {
+    display: none;
+  }
+
+  .meal-plan-grid {
+    grid-template-columns: repeat(7, minmax(125px, 1fr));
+  }
+
+  .stepper-line {
+    left: 10%;
+    right: 10%;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   21. PRINT STYLES
+   -------------------------------------------------------------------------- */
+@media print {
+  *,
+  *::before,
+  *::after {
+    background: transparent !important;
+    color: #000 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  body {
+    font-size: 11pt;
+    line-height: 1.5;
+    background: #fff !important;
+  }
+
+  body::before,
+  body::after {
+    display: none !important;
+  }
+
+  .app-header,
+  .stepper,
+  .app-nav,
+  .plan-actions,
+  .plan-legend {
+    display: none !important;
+  }
+
+  .app-main {
+    max-width: 100%;
+    padding: 0;
+    margin: 0;
+  }
+
+  .meal-plan-grid {
+    display: table;
+    width: 100%;
+    border-collapse: collapse;
+    overflow: visible;
+  }
+
+  .day-column {
+    display: table-cell;
+    vertical-align: top;
+    border: 1px solid #ccc;
+    padding: 0.5rem;
+    min-width: auto;
+  }
+
+  .day-header {
+    border-bottom: 2px solid #000;
+    font-size: 10pt;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.25rem;
+  }
+
+  .day-name {
+    display: inline !important;
+  }
+
+  .day-short {
+    display: none !important;
+  }
+
+  .meal-card {
+    border: 1px solid #ddd;
+    border-radius: 0;
+    padding: 0.4rem;
+    margin-bottom: 0.4rem;
+    page-break-inside: avoid;
+  }
+
+  .meal-type-badge {
+    padding: 0.2rem 0.4rem;
+    font-size: 8pt;
+  }
+
+  .meal-name {
+    font-size: 9pt;
+    font-weight: 700;
+  }
+
+  .meal-description {
+    display: none;
+  }
+
+  .meal-match-bar {
+    display: none;
+  }
+
+  .match-text {
+    display: none;
+  }
+
+  .ingredient.matched {
+    color: #006633 !important;
+  }
+
+  .ingredient.missing {
+    color: #999 !important;
+  }
+
+  @page {
+    margin: 1.5cm;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   22. UTILITY CLASSES
+   -------------------------------------------------------------------------- */
+.hidden {
+  display: none !important;
+}
+
+/* Screen-reader only — visually hidden but accessible */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Gradient text */
+.text-gradient {
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Reusable glassmorphism container */
+.glass {
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+}
+
+/* Focus-visible for keyboard users */
+:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* ========================================================================
+   END OF STYLESHEET
+   ======================================================================== */
