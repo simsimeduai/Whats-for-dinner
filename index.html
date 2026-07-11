@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="What's for Dinner — A smart weekly meal planner that turns your grocery list into a delicious 7-day menu based on your favorite cuisines.">
+  <meta name="theme-color" content="#121520">
+  <title>What's for Dinner — Weekly Meal Planner</title>
+
+  <!-- Google Fonts: Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- App Styles -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <!-- Header                                          -->
+  <!-- ═══════════════════════════════════════════════ -->
+  <header class="app-header" id="app-header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-icon">🍽️</span>
+        <h1 class="logo-text">What's for <span class="text-gradient">Dinner</span></h1>
+      </div>
+      <p class="tagline">Turn your groceries into a week of delicious meals</p>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <!-- Progress Stepper                                -->
+  <!-- ═══════════════════════════════════════════════ -->
+  <nav class="stepper" id="stepper" aria-label="Progress">
+    <div class="stepper-inner">
+      <div class="stepper-line">
+        <div class="stepper-line-fill" id="stepper-line-fill"></div>
+      </div>
+      <div class="stepper-steps">
+        <button class="stepper-step active" id="step-1-btn" data-step="1" aria-current="step">
+          <span class="step-circle">1</span>
+          <span class="step-label">Your Groceries</span>
+        </button>
+        <button class="stepper-step" id="step-2-btn" data-step="2">
+          <span class="step-circle">2</span>
+          <span class="step-label">Pick Cuisines</span>
+        </button>
+        <button class="stepper-step" id="step-3-btn" data-step="3">
+          <span class="step-circle">3</span>
+          <span class="step-label">Meal Plan</span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <!-- Main Content Area                               -->
+  <!-- ═══════════════════════════════════════════════ -->
+  <main class="app-main" id="app-main">
+    <!-- Screens are rendered dynamically by app.js -->
+  </main>
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <!-- Navigation Footer                               -->
+  <!-- ═══════════════════════════════════════════════ -->
+  <footer class="app-nav" id="app-nav">
+    <div class="nav-inner">
+      <button class="btn btn-secondary" id="btn-back" aria-label="Go to previous step">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        Back
+      </button>
+      <button class="btn btn-primary" id="btn-next" aria-label="Go to next step">
+        Next
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
+    </div>
+  </footer>
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <!-- Tesseract.js OCR Engine (CDN)                   -->
+  <!-- ═══════════════════════════════════════════════ -->
+  <script src="https://unpkg.com/tesseract.js@v5.1.1/dist/tesseract.min.js"></script>
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <!-- App Scripts (order matters)                     -->
+  <!-- ═══════════════════════════════════════════════ -->
+  <script src="js/recipe-data.js"></script>
+  <script src="js/ocr-engine.js"></script>
+  <script src="js/grocery-input.js"></script>
+  <script src="js/cuisine-picker.js"></script>
+  <script src="js/meal-planner.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>
