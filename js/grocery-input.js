@@ -712,4 +712,4 @@ const GroceryInput = {
     }
     return false;
   }
-};
+module.exports = GroceryInput;

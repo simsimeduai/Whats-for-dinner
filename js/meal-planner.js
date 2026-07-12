@@ -378,4 +378,4 @@ const MealPlanner = {
 
     return card;
   }
-};
+if (typeof module !== 'undefined') { module.exports = MealPlanner; }
