@@ -301,6 +301,8 @@ const App = {
       toast.classList.remove('toast-visible');
       setTimeout(() => toast.remove(), 300);
     }, 3000);
+  },
+
   /* ══════════════════════════════════════════════════════════════════════
      Monetization Mechanisms (Premium Features)
      ══════════════════════════════════════════════════════════════════════ */
