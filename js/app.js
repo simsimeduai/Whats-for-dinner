@@ -18,16 +18,25 @@ const App = {
   /** @type {string[]} Selected cuisine IDs */
   selectedCuisines: [],
 
+  /** @type {Array} Household dietary profiles */
+  profiles: [],
+
+  /** @type {string[]} User's pantry staples */
+  pantryStaples: [],
+
   /** @type {Object|null} Generated meal plan */
   mealPlan: null,
 
   /* ══════════════════════════════════════════════════════════════════════
-     Initialization
+     State Management (app initialization)
      ══════════════════════════════════════════════════════════════════════ */
 
   /** Boot the application. Called on DOMContentLoaded. */
   init() {
     this._bindNavigation();
+    if (typeof ShoppingList !== 'undefined') {
+      ShoppingList.init();
+    }
     this._renderStep(1);
     this._updateStepper();
     this._updateNavButtons();
@@ -129,6 +138,10 @@ const App = {
   _renderStep(step) {
     const main = document.getElementById('app-main');
 
+    if (typeof ShoppingList !== 'undefined') {
+      ShoppingList.setFABVisible(step === 3);
+    }
+
     switch (step) {
       case 1:
         GroceryInput.render(main, this.groceries);
@@ -137,7 +150,15 @@ const App = {
         CuisinePicker.render(main, this.selectedCuisines);
         break;
       case 3:
-        MealPlanner.render(main, this.groceries, this.selectedCuisines);
+        if (typeof CuisinePicker.getProfiles === 'function') {
+          CuisinePicker._loadProfiles();
+          this.profiles = CuisinePicker.getProfiles();
+        }
+        if (typeof GroceryInput.getPantryStaples === 'function') {
+          GroceryInput._loadPantryStaples();
+          this.pantryStaples = GroceryInput.getPantryStaples();
+        }
+        MealPlanner.render(main, this.groceries, this.selectedCuisines, this.profiles, this.pantryStaples);
         break;
     }
   },
@@ -151,9 +172,11 @@ const App = {
     switch (this.currentStep) {
       case 1:
         this.groceries = GroceryInput.getGroceries();
+        this.pantryStaples = GroceryInput.getPantryStaples();
         break;
       case 2:
         this.selectedCuisines = CuisinePicker.getSelected();
+        this.profiles = CuisinePicker.getProfiles();
         break;
       case 3:
         this.mealPlan = MealPlanner.currentPlan;

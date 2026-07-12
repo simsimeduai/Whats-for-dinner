@@ -12,6 +12,9 @@ const GroceryInput = {
   /** @type {string|null} Currently active input method: 'manual' | 'scan' | 'upload' | null */
   activeMethod: null,
 
+  /** @type {string[]} User-managed pantry staples list */
+  pantryStaples: [],
+
   /** @type {HTMLElement|null} Reference to the main container */
   container: null,
 
@@ -29,8 +32,8 @@ const GroceryInput = {
     const header = document.createElement('div');
     header.className = 'screen-header';
     header.innerHTML = `
-      <h2 class="screen-title">What's in your kitchen?</h2>
-      <p class="screen-subtitle">Add your available groceries — type them in, scan a receipt, or upload a list</p>
+      <h2 class="screen-title">What's in My Pantry?</h2>
+      <p class="screen-subtitle">Add what you've got — we'll handle the rest 🧡</p>
     `;
     container.appendChild(header);
 
@@ -91,11 +94,17 @@ const GroceryInput = {
       });
     });
 
+    // Load pantry staples from localStorage
+    this._loadPantryStaples();
+
     // Default to manual input
     this._selectMethod('manual');
 
     // Render existing groceries if any
     this._renderGroceryList();
+
+    // Render pantry staples section
+    this._renderPantryStaples();
   },
 
   /**
@@ -711,5 +720,158 @@ const GroceryInput = {
       setTimeout(() => section.classList.remove('shake'), 500);
     }
     return false;
-  }
+  },
+
+  /**
+   * Load pantry staples from localStorage, falling back to defaults.
+   * @private
+   */
+  _loadPantryStaples() {
+    try {
+      const stored = localStorage.getItem('wfd_pantry_staples');
+      if (stored) {
+        this.pantryStaples = JSON.parse(stored);
+      } else {
+        this.pantryStaples = typeof DEFAULT_PANTRY_STAPLES !== 'undefined'
+          ? [...DEFAULT_PANTRY_STAPLES]
+          : ['oil', 'olive oil', 'butter', 'salt', 'black pepper', 'sugar', 'flour', 'water', 'vinegar', 'garlic powder', 'onion powder'];
+        this._savePantryStaples();
+      }
+    } catch (e) {
+      this.pantryStaples = ['oil', 'salt', 'black pepper', 'butter', 'flour', 'sugar'];
+    }
+  },
+
+  /**
+   * Save pantry staples to localStorage.
+   * @private
+   */
+  _savePantryStaples() {
+    try {
+      localStorage.setItem('wfd_pantry_staples', JSON.stringify(this.pantryStaples));
+    } catch (e) {
+      console.warn('Could not save pantry staples:', e);
+    }
+  },
+
+  /**
+   * Render the "My Pantry Staples" section below the grocery list.
+   * @private
+   */
+  _renderPantryStaples() {
+    // Remove existing section if present
+    const existing = document.getElementById('pantry-staples-section');
+    if (existing) existing.remove();
+
+    const section = document.createElement('div');
+    section.className = 'pantry-staples-section';
+    section.id = 'pantry-staples-section';
+
+    section.innerHTML = `
+      <div class="pantry-staples-header">
+        <div class="pantry-staples-title-row">
+          <span class="pantry-icon">🧂</span>
+          <h3 class="pantry-staples-title">My Pantry Staples</h3>
+          <span class="pantry-staples-hint">Always on hand — won't show as missing</span>
+        </div>
+        <button class="btn-reset-staples" id="btn-reset-staples" aria-label="Reset to defaults">Reset to defaults</button>
+      </div>
+      <div class="pantry-chips-container" id="pantry-chips-container"></div>
+      <div class="pantry-add-row">
+        <input type="text" class="pantry-add-input" id="pantry-add-input"
+          placeholder="Add your staple (e.g. peri peri sauce, ghee...)" autocomplete="off"
+          aria-label="Add custom pantry staple" />
+        <button class="btn-add-staple" id="btn-add-staple" aria-label="Add staple">+ Add</button>
+      </div>
+    `;
+
+    // Append after grocery-section
+    const grocerySection = document.getElementById('grocery-section');
+    if (grocerySection && grocerySection.parentNode) {
+      grocerySection.parentNode.insertBefore(section, grocerySection.nextSibling);
+    } else if (this.container) {
+      this.container.appendChild(section);
+    }
+
+    this._renderPantryChips();
+
+    // Add staple button
+    document.getElementById('btn-add-staple')?.addEventListener('click', () => {
+      this._addPantryStaple();
+    });
+
+    // Add on Enter key
+    document.getElementById('pantry-add-input')?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        this._addPantryStaple();
+      }
+    });
+
+    // Reset to defaults
+    document.getElementById('btn-reset-staples')?.addEventListener('click', () => {
+      this.pantryStaples = typeof DEFAULT_PANTRY_STAPLES !== 'undefined'
+        ? [...DEFAULT_PANTRY_STAPLES]
+        : ['oil', 'salt', 'black pepper', 'butter', 'flour', 'sugar'];
+      this._savePantryStaples();
+      this._renderPantryChips();
+    });
+  },
+
+  /**
+   * Render the pantry staple chips inside the container.
+   * @private
+   */
+  _renderPantryChips() {
+    const container = document.getElementById('pantry-chips-container');
+    if (!container) return;
+    container.innerHTML = '';
+
+    this.pantryStaples.forEach((staple) => {
+      const chip = document.createElement('span');
+      chip.className = 'pantry-chip';
+      chip.innerHTML = `
+        <span class="pantry-chip-label">${staple}</span>
+        <button class="pantry-chip-remove" aria-label="Remove ${staple} from pantry staples">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      `;
+      chip.querySelector('.pantry-chip-remove').addEventListener('click', () => {
+        this.pantryStaples = this.pantryStaples.filter(s => s !== staple);
+        this._savePantryStaples();
+        this._renderPantryChips();
+      });
+      container.appendChild(chip);
+    });
+  },
+
+  /**
+   * Add a new custom pantry staple.
+   * @private
+   */
+  _addPantryStaple() {
+    const input = document.getElementById('pantry-add-input');
+    if (!input) return;
+    const val = input.value.trim().toLowerCase();
+    if (!val || this.pantryStaples.includes(val)) {
+      input.value = '';
+      return;
+    }
+    this.pantryStaples.push(val);
+    this._savePantryStaples();
+    this._renderPantryChips();
+    input.value = '';
+    input.focus();
+  },
+
+  /**
+   * Get the current pantry staples list.
+   * @returns {string[]}
+   */
+  getPantryStaples() {
+    return [...this.pantryStaples];
+  },
 };

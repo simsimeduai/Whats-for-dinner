@@ -115,6 +115,9 @@ const CuisinePicker = {
   /** @private */
   _countIndicator: null,
 
+  /** @type {Array} Household dietary profiles */
+  _profiles: [],
+
   /* ------------------------------------------------------------------ */
   /*  Public API                                                         */
   /* ------------------------------------------------------------------ */
@@ -142,11 +145,16 @@ const CuisinePicker = {
     const subtitle = document.createElement("p");
     subtitle.classList.add("cuisine-subtitle");
     subtitle.textContent =
-      "Select your preferred cuisines — we'll match recipes to your groceries";
+      "Pick cuisines and set dietary preferences — we'll do the rest";
 
     header.appendChild(title);
     header.appendChild(subtitle);
     container.appendChild(header);
+
+    // Load profiles from localStorage
+    this._loadProfiles();
+    // Render dietary profiles section on top
+    this._renderDietarySection(container);
 
     /* ---------- Select All / Deselect All toggle ---------- */
     const toggleBtn = document.createElement("button");
@@ -374,5 +382,249 @@ const CuisinePicker = {
     }
 
     setTimeout(() => warning.remove(), 3000);
+  },
+
+  /**
+   * Load dietary profiles from localStorage.
+   * @private
+   */
+  _loadProfiles() {
+    try {
+      const stored = localStorage.getItem('wfd_profiles');
+      this._profiles = stored ? JSON.parse(stored) : [];
+    } catch (e) {
+      this._profiles = [];
+    }
+  },
+
+  /**
+   * Save profiles to localStorage.
+   * @private
+   */
+  _saveProfiles() {
+    try {
+      localStorage.setItem('wfd_profiles', JSON.stringify(this._profiles));
+    } catch (e) {
+      console.warn('Could not save profiles:', e);
+    }
+  },
+
+  /**
+   * Render the full dietary preferences section below the cuisine grid.
+   * @private
+   * @param {HTMLElement} container
+   */
+  _renderDietarySection(container) {
+    const section = document.createElement('div');
+    section.className = 'dietary-section';
+    section.id = 'dietary-section';
+
+    section.innerHTML = `
+      <div class="dietary-header">
+        <h3 class="dietary-title">👨‍👩‍👧 Who's eating?</h3>
+        <p class="dietary-subtitle">Add dietary needs per person — we'll suggest smart recipe swaps</p>
+      </div>
+      <div class="profiles-list" id="profiles-list"></div>
+      <button class="btn-add-person" id="btn-add-person" aria-label="Add person">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        Add Person
+      </button>
+    `;
+    container.appendChild(section);
+
+    this._renderProfiles();
+
+    document.getElementById('btn-add-person')?.addEventListener('click', () => {
+      const name = `Person ${this._profiles.length + 1}`;
+      this._profiles.push({ name, dietaryFlags: [], allergies: [] });
+      this._saveProfiles();
+      this._renderProfiles();
+    });
+  },
+
+  /**
+   * Render all profile cards in the profiles list.
+   * @private
+   */
+  _renderProfiles() {
+    const list = document.getElementById('profiles-list');
+    if (!list) return;
+    list.innerHTML = '';
+
+    const DIET_OPTIONS = [
+      { id: 'no-restrictions', label: 'No Restrictions', emoji: '✅' },
+      { id: 'vegan', label: 'Vegan', emoji: '🌱' },
+      { id: 'vegetarian', label: 'Vegetarian', emoji: '🥦' },
+      { id: 'pescatarian', label: 'Pescatarian', emoji: '🐟' },
+      { id: 'keto', label: 'Keto', emoji: '🥑' },
+      { id: 'gluten-free', label: 'Gluten-Free', emoji: '🌾' },
+      { id: 'dairy-free', label: 'Dairy-Free', emoji: '🥛' },
+      { id: 'nut-free', label: 'Nut-Free', emoji: '🥜' },
+      { id: 'low-sodium', label: 'Low-Sodium', emoji: '🧂' },
+      { id: 'heart-healthy', label: 'Heart Healthy', emoji: '❤️' },
+    ];
+
+    if (this._profiles.length === 0) {
+      list.innerHTML = `
+        <p class="no-profiles-hint">No dietary restrictions? No worries — we'll show all recipes.<br>
+        <button class="btn-add-person-inline" id="btn-add-person-inline">+ Add a person with dietary needs</button></p>
+      `;
+      document.getElementById('btn-add-person-inline')?.addEventListener('click', () => {
+        document.getElementById('btn-add-person')?.click();
+      });
+      return;
+    }
+
+    this._profiles.forEach((profile, profileIdx) => {
+      const card = document.createElement('div');
+      card.className = 'profile-card';
+      card.dataset.profileIdx = profileIdx;
+
+      // Name row
+      const nameRow = document.createElement('div');
+      nameRow.className = 'profile-name-row';
+      nameRow.innerHTML = `
+        <span class="profile-avatar">${profile.name.charAt(0).toUpperCase()}</span>
+        <input type="text" class="profile-name-input" value="${profile.name}" placeholder="Name" aria-label="Person name" />
+        <button class="profile-remove-btn" aria-label="Remove ${profile.name}">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      `;
+      card.appendChild(nameRow);
+
+      // Name input
+      nameRow.querySelector('.profile-name-input').addEventListener('input', (e) => {
+        this._profiles[profileIdx].name = e.target.value || `Person ${profileIdx + 1}`;
+        this._saveProfiles();
+      });
+
+      // Remove button
+      nameRow.querySelector('.profile-remove-btn').addEventListener('click', () => {
+        this._profiles.splice(profileIdx, 1);
+        this._saveProfiles();
+        this._renderProfiles();
+      });
+
+      // Diet chips
+      const chipsRow = document.createElement('div');
+      chipsRow.className = 'diet-chips-row';
+      DIET_OPTIONS.forEach(opt => {
+        const chip = document.createElement('button');
+        chip.className = 'diet-chip' + (profile.dietaryFlags.includes(opt.id) ? ' selected' : '');
+        chip.type = 'button';
+        chip.dataset.flag = opt.id;
+        chip.innerHTML = `<span class="diet-emoji">${opt.emoji}</span> ${opt.label}`;
+        chip.setAttribute('aria-pressed', String(profile.dietaryFlags.includes(opt.id)));
+        chip.addEventListener('click', () => {
+          if (opt.id === 'no-restrictions') {
+            this._profiles[profileIdx].dietaryFlags = [];
+          } else {
+            const idx = this._profiles[profileIdx].dietaryFlags.indexOf(opt.id);
+            if (idx >= 0) {
+              this._profiles[profileIdx].dietaryFlags.splice(idx, 1);
+            } else {
+              this._profiles[profileIdx].dietaryFlags.push(opt.id);
+            }
+          }
+          this._saveProfiles();
+          this._renderProfiles();
+        });
+        chipsRow.appendChild(chip);
+      });
+      card.appendChild(chipsRow);
+
+      // Allergies section
+      const allergySection = document.createElement('div');
+      allergySection.className = 'allergy-section';
+      allergySection.innerHTML = `
+        <details class="allergy-details">
+          <summary class="allergy-summary">🚫 Allergies & Intolerances ${profile.allergies.length > 0 ? '<span class="allergy-count">' + profile.allergies.length + '</span>' : ''}</summary>
+          <div class="allergy-body">
+            <div class="allergy-tags" id="allergy-tags-${profileIdx}"></div>
+            <div class="allergy-add-row">
+              <input type="text" class="allergy-input" id="allergy-input-${profileIdx}" placeholder="e.g. shellfish, tree nuts..." />
+              <button class="btn-add-allergy" id="btn-add-allergy-${profileIdx}">Add</button>
+            </div>
+          </div>
+        </details>
+      `;
+      card.appendChild(allergySection);
+
+      list.appendChild(card);
+
+      // Render allergy tags
+      this._renderAllergyTags(profileIdx);
+
+      // Allergy add
+      document.getElementById(`btn-add-allergy-${profileIdx}`)?.addEventListener('click', () => {
+        const input = document.getElementById(`allergy-input-${profileIdx}`);
+        const val = input?.value.trim().toLowerCase();
+        if (val && !this._profiles[profileIdx].allergies.includes(val)) {
+          this._profiles[profileIdx].allergies.push(val);
+          this._saveProfiles();
+          this._renderProfiles();
+        } else if (input) {
+          input.value = '';
+        }
+      });
+
+      document.getElementById(`allergy-input-${profileIdx}`)?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          document.getElementById(`btn-add-allergy-${profileIdx}`)?.click();
+        }
+      });
+    });
+  },
+
+  /**
+   * Render allergy tags for a profile.
+   * @private
+   * @param {number} profileIdx
+   */
+  _renderAllergyTags(profileIdx) {
+    const container = document.getElementById(`allergy-tags-${profileIdx}`);
+    if (!container) return;
+    const profile = this._profiles[profileIdx];
+    container.innerHTML = '';
+    profile.allergies.forEach(allergy => {
+      const tag = document.createElement('span');
+      tag.className = 'allergy-tag';
+      tag.innerHTML = `
+        ${allergy}
+        <button class="allergy-tag-remove" aria-label="Remove ${allergy} allergy">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      `;
+      tag.querySelector('.allergy-tag-remove').addEventListener('click', () => {
+        this._profiles[profileIdx].allergies = this._profiles[profileIdx].allergies.filter(a => a !== allergy);
+        this._saveProfiles();
+        this._renderProfiles();
+      });
+      container.appendChild(tag);
+    });
+  },
+
+  /**
+   * Get all household profiles.
+   * @returns {Array<{name: string, dietaryFlags: string[], allergies: string[]}>}
+   */
+  getProfiles() {
+    return this._profiles.map(p => ({ ...p }));
+  },
+
+  /**
+   * Get the merged set of all dietary restrictions across all profiles.
+   * Used for hard-filtering recipes.
+   * @returns {Object} { flags: string[], allergies: string[] }
+   */
+  getHouseholdRestrictions() {
+    const flags = new Set();
+    const allergies = new Set();
+    this._profiles.forEach(p => {
+      p.dietaryFlags.forEach(f => flags.add(f));
+      p.allergies.forEach(a => allergies.add(a));
+    });
+    return { flags: [...flags], allergies: [...allergies] };
   }
 };

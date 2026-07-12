@@ -1528,3 +1528,124 @@ const COMMON_GROCERIES = [
   "za'atar",
   "zucchini"
 ];
+
+// ============================================================
+// INGREDIENT CATEGORIES
+// Maps ingredient names to shopping store sections
+// ============================================================
+const INGREDIENT_CATEGORIES = {
+  // Proteins
+  'chicken': 'Proteins', 'beef': 'Proteins', 'ground beef': 'Proteins', 'lamb': 'Proteins',
+  'pork': 'Proteins', 'pork belly': 'Proteins', 'pork ribs': 'Proteins', 'turkey': 'Proteins',
+  'salmon': 'Proteins', 'shrimp': 'Proteins', 'tuna': 'Proteins', 'fish': 'Proteins',
+  'tofu': 'Proteins', 'paneer': 'Proteins', 'chickpea': 'Proteins', 'lentil': 'Proteins',
+  'red lentil': 'Proteins', 'kidney bean': 'Proteins', 'black bean': 'Proteins',
+  'egg': 'Proteins', 'sausage': 'Proteins', 'bacon': 'Proteins',
+  // Produce
+  'tomato': 'Produce', 'onion': 'Produce', 'garlic': 'Produce', 'ginger': 'Produce',
+  'spinach': 'Produce', 'bell pepper': 'Produce', 'zucchini': 'Produce', 'carrot': 'Produce',
+  'potato': 'Produce', 'sweet potato': 'Produce', 'celery': 'Produce', 'cucumber': 'Produce',
+  'broccoli': 'Produce', 'cauliflower': 'Produce', 'mushroom': 'Produce', 'pea': 'Produce',
+  'corn': 'Produce', 'lettuce': 'Produce', 'romaine lettuce': 'Produce', 'kale': 'Produce',
+  'cabbage': 'Produce', 'eggplant': 'Produce', 'green chili': 'Produce', 'jalapeno': 'Produce',
+  'lemon': 'Produce', 'lime': 'Produce', 'avocado': 'Produce', 'red onion': 'Produce',
+  'shallot': 'Produce', 'leek': 'Produce', 'asparagus': 'Produce', 'basil': 'Produce',
+  'cilantro': 'Produce', 'parsley': 'Produce', 'mint': 'Produce', 'thyme': 'Produce',
+  'rosemary': 'Produce', 'green onion': 'Produce', 'curry leaf': 'Produce',
+  // Dairy & Eggs
+  'milk': 'Dairy & Eggs', 'cream': 'Dairy & Eggs', 'heavy cream': 'Dairy & Eggs',
+  'butter': 'Dairy & Eggs', 'cheese': 'Dairy & Eggs', 'mozzarella': 'Dairy & Eggs',
+  'parmesan': 'Dairy & Eggs', 'ricotta': 'Dairy & Eggs', 'feta': 'Dairy & Eggs',
+  'yogurt': 'Dairy & Eggs', 'ghee': 'Dairy & Eggs', 'coconut cream': 'Dairy & Eggs',
+  // Pantry & Grains
+  'rice': 'Pantry', 'pasta': 'Pantry', 'bread': 'Pantry', 'flour': 'Pantry',
+  'flattened rice': 'Pantry', 'rice noodle': 'Pantry', 'sweet potato noodle': 'Pantry',
+  'wonton wrapper': 'Pantry', 'tortilla': 'Pantry', 'bread crumb': 'Pantry', 'noodle': 'Pantry',
+  'soy sauce': 'Pantry', 'sesame oil': 'Pantry', 'sesame paste': 'Pantry',
+  'sesame seed': 'Pantry', 'fish sauce': 'Pantry', 'oyster sauce': 'Pantry',
+  'rice vinegar': 'Pantry', 'balsamic vinegar': 'Pantry', 'red wine vinegar': 'Pantry',
+  'olive oil': 'Pantry', 'coconut milk': 'Pantry', 'tomato sauce': 'Pantry',
+  'tomato paste': 'Pantry', 'broth': 'Pantry', 'honey': 'Pantry', 'sugar': 'Pantry',
+  'vinegar': 'Pantry', 'salsa': 'Pantry', 'salsa verde': 'Pantry', 'miso paste': 'Pantry',
+  'tahini': 'Pantry', 'peanut': 'Pantry', 'walnut': 'Pantry', 'almond': 'Pantry',
+  'sake': 'Pantry', 'white wine': 'Pantry', 'red wine': 'Pantry', 'dashi': 'Pantry',
+  'sriracha': 'Pantry', 'gochujang': 'Pantry', 'hoisin sauce': 'Pantry', 'peanut butter': 'Pantry',
+  'rice cake': 'Pantry', 'cornstarch': 'Pantry', 'baking powder': 'Pantry', 'yeast': 'Pantry',
+  'vanilla': 'Pantry',
+  // Spices & Seasonings
+  'salt': 'Spices & Seasonings', 'black pepper': 'Spices & Seasonings',
+  'white pepper': 'Spices & Seasonings', 'oil': 'Spices & Seasonings',
+  'cumin': 'Spices & Seasonings', 'turmeric': 'Spices & Seasonings',
+  'paprika': 'Spices & Seasonings', 'chili powder': 'Spices & Seasonings',
+  'garam masala': 'Spices & Seasonings', 'coriander': 'Spices & Seasonings',
+  'mustard seed': 'Spices & Seasonings', 'red pepper flake': 'Spices & Seasonings',
+  'cayenne': 'Spices & Seasonings', 'cinnamon': 'Spices & Seasonings',
+  'cardamom': 'Spices & Seasonings', 'bay leaf': 'Spices & Seasonings',
+  'saffron': 'Spices & Seasonings', 'clove': 'Spices & Seasonings',
+  'allspice': 'Spices & Seasonings', 'nutmeg': 'Spices & Seasonings',
+  "za'atar": 'Spices & Seasonings', 'sumac': 'Spices & Seasonings',
+  'ras el hanout': 'Spices & Seasonings', 'harissa': 'Spices & Seasonings',
+  'five spice': 'Spices & Seasonings', 'star anise': 'Spices & Seasonings',
+  'garlic powder': 'Spices & Seasonings', 'onion powder': 'Spices & Seasonings',
+  'dried thyme': 'Spices & Seasonings', 'dried oregano': 'Spices & Seasonings',
+};
+
+// ============================================================
+// SWAP REGISTRY
+// Maps ingredients to their possible substitutions.
+// Protein-level swaps support per-dietary-profile substitutions.
+// ============================================================
+const SWAP_REGISTRY = {
+  // Ingredient-level swaps (for missing items)
+  'red pepper flake': ['black pepper', 'cayenne', 'paprika'],
+  'chili powder':     ['paprika', 'cayenne', 'red pepper flake'],
+  'soy sauce':        ['tamari', 'coconut aminos', 'salt'],
+  'heavy cream':      ['coconut cream', 'yogurt', 'evaporated milk'],
+  'cream':            ['coconut cream', 'yogurt', 'heavy cream'],
+  'butter':           ['coconut oil', 'olive oil', 'ghee'],
+  'ghee':             ['butter', 'coconut oil', 'olive oil'],
+  'lemon':            ['lime', 'rice vinegar', 'white wine vinegar'],
+  'lime':             ['lemon', 'rice vinegar'],
+  'garam masala':     ['curry powder', 'cumin', 'coriander'],
+  'mozzarella':       ['cheese', 'ricotta', 'feta'],
+  'parmesan':         ['pecorino', 'cheese', 'nutritional yeast'],
+  'ricotta':          ['cream cheese', 'cottage cheese', 'tofu'],
+  'yogurt':           ['sour cream', 'coconut yogurt', 'cream'],
+  'sesame oil':       ['olive oil', 'vegetable oil'],
+  'fish sauce':       ['soy sauce', 'tamari'],
+  'oyster sauce':     ['hoisin sauce', 'soy sauce'],
+  'tahini':           ['peanut butter', 'almond butter', 'sesame paste'],
+  'peanut':           ['cashew', 'almond', 'sunflower seed'],
+  'honey':            ['maple syrup', 'sugar', 'agave'],
+  'white wine':       ['chicken broth', 'white grape juice', 'apple cider vinegar'],
+  'red wine':         ['beef broth', 'grape juice', 'pomegranate juice'],
+  'sake':             ['dry sherry', 'white wine', 'rice vinegar'],
+  'miso paste':       ['soy sauce', 'tahini'],
+  'coconut milk':     ['heavy cream', 'oat milk', 'almond milk'],
+  'broth':            ['water', 'stock', 'bouillon'],
+  'bread crumb':      ['panko', 'crushed crackers', 'almond flour'],
+  'celery':           ['fennel', 'cucumber', 'green onion'],
+  'zucchini':         ['yellow squash', 'cucumber', 'eggplant'],
+  'spinach':          ['kale', 'chard', 'arugula'],
+  'paneer':           ['tofu', 'halloumi', 'cheese'],
+  // Protein-level swaps (dietary profile substitutions per meal card)
+  'chicken': { vegan: 'tofu', vegetarian: 'paneer', pescatarian: 'shrimp', keto: 'chicken' },
+  'beef':    { vegan: 'lentil', vegetarian: 'black bean', pescatarian: 'tuna' },
+  'ground beef': { vegan: 'lentil', vegetarian: 'black bean', pescatarian: 'tuna' },
+  'lamb':    { vegan: 'tofu', vegetarian: 'chickpea' },
+  'pork':    { vegan: 'tofu', vegetarian: 'mushroom', pescatarian: 'shrimp' },
+  'shrimp':  { vegan: 'tofu', vegetarian: 'mushroom' },
+  'salmon':  { vegan: 'tofu', vegetarian: 'eggplant' },
+  'tuna':    { vegan: 'chickpea', vegetarian: 'chickpea' },
+  'turkey':  { vegan: 'lentil', vegetarian: 'lentil', pescatarian: 'salmon' },
+};
+
+// ============================================================
+// DEFAULT PANTRY STAPLES
+// These are common household essentials pre-seeded in Step 1.
+// Users can remove these or add their own custom staples.
+// ============================================================
+const DEFAULT_PANTRY_STAPLES = [
+  'oil', 'olive oil', 'butter', 'salt', 'black pepper', 'sugar', 'flour',
+  'water', 'vinegar', 'garlic powder', 'onion powder'
+];
