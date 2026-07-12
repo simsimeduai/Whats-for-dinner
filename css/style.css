@@ -2788,3 +2788,191 @@ input, textarea, select {
   body.print-mode-shopping-list #print-shopping-list li { padding: 0.25rem 0; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem; }
   body.print-mode-shopping-list #print-shopping-list li::before { content: '☐'; font-size: 1rem; }
 }
+
+/* ════════════════════════════════════════════════════════════════════════
+   COMPACT PERSONAL PREFERENCES & FAMILY SERVINGS STYLES
+   ════════════════════════════════════════════════════════════════════════ */
+
+.profile-capsule {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 1rem;
+  background: hsl(225, 12%, 18%);
+  border: 1px solid hsl(225, 12%, 26%);
+  border-radius: 2rem;
+  cursor: pointer;
+  transition: border-color 0.2s, background-color 0.2s;
+  user-select: none;
+}
+.profile-capsule:hover {
+  border-color: hsl(258, 55%, 50%);
+  background-color: hsl(225, 12%, 21%);
+}
+.profile-capsule:focus-visible {
+  outline: 2px solid hsl(258, 65%, 55%);
+}
+
+.capsule-avatar {
+  width: 1.6rem;
+  height: 1.6rem;
+  background: hsl(258, 55%, 38%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: hsl(258, 90%, 95%);
+  flex-shrink: 0;
+}
+
+.capsule-details {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.capsule-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: hsl(220, 15%, 90%);
+}
+
+.capsule-divider {
+  color: hsl(220, 10%, 40%);
+}
+
+.capsule-summary {
+  font-size: 0.8rem;
+  color: hsl(220, 10%, 55%);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.capsule-edit-icon {
+  font-size: 0.85rem;
+  color: hsl(220, 10%, 45%);
+  margin-left: auto;
+  transition: color 0.15s;
+}
+.profile-capsule:hover .capsule-edit-icon {
+  color: hsl(258, 70%, 65%);
+}
+
+.profile-card.expanded {
+  border-color: hsl(258, 50%, 40%);
+  box-shadow: 0 4px 20px hsl(258, 60%, 25% / 0.3);
+}
+
+/* Family Servings UI in Step 3 */
+.family-servings {
+  background: hsl(225, 12%, 18%);
+  border: 1px solid hsl(225, 12%, 26%);
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.875rem;
+}
+
+.servings-header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+}
+.servings-icon { font-size: 1rem; }
+.servings-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: hsl(220, 15%, 85%);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.servings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.serving-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.82rem;
+  border-bottom: 1px dashed hsl(225, 12%, 24%);
+  padding-bottom: 0.4rem;
+}
+.serving-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.serving-row-info {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.serving-person-name {
+  color: hsl(220, 10%, 55%);
+}
+
+.serving-eating-text {
+  color: hsl(220, 15%, 88%);
+}
+
+.serving-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.1rem 0.5rem;
+  border-radius: 2rem;
+}
+.serving-badge.standard {
+  background: hsl(160, 60%, 12%);
+  border: 1px solid hsl(160, 50%, 22%);
+  color: hsl(160, 75%, 60%);
+}
+.serving-badge.swap {
+  background: hsl(258, 45%, 15%);
+  border: 1px solid hsl(258, 40%, 28%);
+  color: hsl(258, 80%, 80%);
+}
+
+.serving-warning {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.1rem 0.5rem;
+  border-radius: 2rem;
+  background: hsl(0, 55%, 15%);
+  border: 1px solid hsl(0, 45%, 28%);
+  color: hsl(0, 75%, 72%);
+}
+
+.btn-serving-swap {
+  font-size: 0.72rem;
+  color: hsl(258, 70%, 70%);
+  background: none;
+  border: 1px solid hsl(258, 50%, 30%);
+  border-radius: 0.4rem;
+  padding: 0.2rem 0.5rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.btn-serving-swap:hover {
+  border-color: hsl(258, 65%, 50%);
+  background: hsl(258, 45%, 14%);
+  color: hsl(258, 85%, 85%);
+}
+
+.serving-swap-popover {
+  min-width: 140px;
+}

@@ -28,6 +28,9 @@ const MealPlanner = {
   /** @type {Object} Remembered recipe-level protein subs */
   recipeSubs: {},
 
+  /** @type {Object} Custom serving protein swaps per person: { [recipeId]: { [personName]: ingredientName } } */
+  personalSwaps: {},
+
   /** Day names for the weekly grid */
   DAYS: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
 
@@ -59,9 +62,10 @@ const MealPlanner = {
     this.cuisines       = selectedCuisines;
     this.profiles       = profiles;
 
-    // Load swap memory & recipe subs from localStorage
+    // Load swap memory, recipe subs, & personal swaps from localStorage
     this._loadSwapMemory();
     this._loadRecipeSubs();
+    this._loadPersonalSwaps();
 
     // Merge all allergies across profiles (hard filter)
     const allAllergies = new Set();
@@ -423,6 +427,128 @@ const MealPlanner = {
   },
 
   /**
+   * Find the main protein in a recipe that supports substitutions.
+   * @private
+   */
+  _findMainProtein(recipe) {
+    const swapReg = typeof SWAP_REGISTRY !== 'undefined' ? SWAP_REGISTRY : {};
+    return (recipe.ingredients || []).find(i => {
+      const entry = swapReg[i.toLowerCase()];
+      return entry && typeof entry === 'object' && !Array.isArray(entry);
+    });
+  },
+
+  /**
+   * Calculate dietary substitutions and ingredients list for a recipe.
+   * @private
+   */
+  _getRecipeServingsAndIngredients(recipe) {
+    const swapReg = typeof SWAP_REGISTRY !== 'undefined' ? SWAP_REGISTRY : {};
+    const mainProtein = this._findMainProtein(recipe);
+    
+    const servings = [];
+    const proteinsEaten = new Set();
+    
+    if (this.profiles && this.profiles.length > 0) {
+      this.profiles.forEach(person => {
+        let eating = mainProtein || '';
+        let isSwapped = false;
+        
+        if (mainProtein) {
+          const mainKey = mainProtein.toLowerCase();
+          const swapEntry = swapReg[mainKey];
+          
+          // Check personal swaps
+          if (this.personalSwaps[recipe.id] && this.personalSwaps[recipe.id][person.name]) {
+            eating = this.personalSwaps[recipe.id][person.name];
+            isSwapped = eating.toLowerCase() !== mainKey;
+          } else {
+            // Auto-apply based on dietary flags
+            for (const flag of (person.dietaryFlags || [])) {
+              if (swapEntry[flag]) {
+                eating = swapEntry[flag];
+                isSwapped = true;
+                break;
+              }
+            }
+          }
+        }
+        
+        // Allergen check
+        let allergenWarning = '';
+        if (person.allergies && person.allergies.some(a => eating.toLowerCase().includes(a.toLowerCase()))) {
+          allergenWarning = `⚠️ Contains ${eating}`;
+        }
+        
+        // Find swap options
+        const swapOptions = [];
+        if (mainProtein) {
+          const mainKey = mainProtein.toLowerCase();
+          const swapEntry = swapReg[mainKey];
+          swapOptions.push(mainProtein);
+          Object.values(swapEntry).forEach(val => {
+            if (!swapOptions.map(s => s.toLowerCase()).includes(val.toLowerCase())) {
+              swapOptions.push(val);
+            }
+          });
+        }
+        
+        servings.push({
+          personName: person.name,
+          dietLabel: person.dietaryFlags && person.dietaryFlags.length > 0 ? person.dietaryFlags.join(', ') : 'No Restrictions',
+          eating,
+          originalProtein: mainProtein || '',
+          swapOptions,
+          isSwapped,
+          allergenWarning
+        });
+        
+        if (eating) {
+          proteinsEaten.add(eating.toLowerCase());
+        }
+      });
+    } else {
+      if (mainProtein) {
+        proteinsEaten.add(mainProtein.toLowerCase());
+      }
+    }
+    
+    // Assemble all ingredients needed
+    const allIngredients = [];
+    if (recipe.ingredients) {
+      recipe.ingredients.forEach(ing => {
+        if (mainProtein && ing.toLowerCase() === mainProtein.toLowerCase()) {
+          // Skip standard protein
+        } else {
+          allIngredients.push(ing);
+        }
+      });
+    }
+    
+    // Add all proteins eaten
+    proteinsEaten.forEach(p => {
+      const originalCasing = recipe.ingredients?.find(i => i.toLowerCase() === p) || p;
+      allIngredients.push(originalCasing);
+    });
+    
+    // Matched vs Missing
+    const haveSet = new Set([...this.groceries, ...this.pantryStaples]);
+    const matched = allIngredients.filter(i => haveSet.has(i.toLowerCase()));
+    const missing = allIngredients.filter(i => !haveSet.has(i.toLowerCase()));
+    const pantry = allIngredients.filter(i => 
+      this.pantryStaples.includes(i.toLowerCase()) && !this.groceries.includes(i.toLowerCase())
+    );
+    
+    return {
+      servings,
+      matched,
+      missing,
+      pantry,
+      mainProtein
+    };
+  },
+
+  /**
    * Create an expandable meal card with ingredient gap panel.
    * @private
    */
@@ -431,20 +557,12 @@ const MealPlanner = {
     card.className = 'meal-card';
     card.style.setProperty('--meal-color', mealMeta.color);
 
-    const missingCount = (recipe.missingIngredients || []).length;
-    const recipeSubKey = `${recipe.id}`;
-    const appliedSub = this.recipeSubs[recipeSubKey];
+    const { servings, matched, missing, pantry } = this._getRecipeServingsAndIngredients(recipe);
+    const missingCount = missing.length;
 
     const gapBadgeHTML = missingCount > 0
       ? `<span class="ingredient-gap-badge">🟡 ${missingCount} missing · tap to review</span>`
       : `<span class="ingredient-gap-badge none">✅ All ingredients available</span>`;
-
-    const dietaryBannerHTML = (recipe.dietarySwap && !appliedSub)
-      ? `<div class="dietary-swap-banner" id="swap-banner-${recipe.id}">
-          🌱 Make it ${recipe.dietarySwap.forFlag}: swap <strong>${recipe.dietarySwap.protein}</strong> → <strong>${recipe.dietarySwap.swapTo}</strong>
-          <button class="btn-apply-swap" data-recipe-id="${recipe.id}" data-protein="${recipe.dietarySwap.protein}" data-swap-to="${recipe.dietarySwap.swapTo}">Apply</button>
-        </div>`
-      : (appliedSub ? `<div class="swap-memory-chip">💾 Applied: ${appliedSub.protein} → ${appliedSub.swapTo}</div>` : '');
 
     // Collapsed card HTML
     card.innerHTML = `
@@ -464,7 +582,7 @@ const MealPlanner = {
         <p class="meal-description">${recipe.description || ''}</p>
         ${gapBadgeHTML}
         <div class="ingredient-panel" id="panel-${recipe.id}" style="display:none">
-          ${dietaryBannerHTML}
+          <div class="family-servings" id="family-servings-${recipe.id}"></div>
           <div id="ingredient-content-${recipe.id}"></div>
           <div class="kitchen-staples-area" id="staples-area-${recipe.id}"></div>
           <button class="meal-add-all-btn" id="add-all-${recipe.id}" ${missingCount === 0 ? 'disabled' : ''}>
@@ -477,7 +595,6 @@ const MealPlanner = {
     // ── Expand / Collapse ──
     const content = card.querySelector('.meal-content');
     const panel = card.querySelector(`#panel-${recipe.id}`);
-    const badge = card.querySelector('.ingredient-gap-badge');
 
     const openCard = () => {
       if (card.classList.contains('expanded')) return;
@@ -498,30 +615,6 @@ const MealPlanner = {
       }
     });
 
-    // Apply dietary swap
-    card.querySelector('.btn-apply-swap')?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const recipeId = e.target.dataset.recipeId;
-      const protein = e.target.dataset.protein;
-      const swapTo = e.target.dataset.swapTo;
-      this.recipeSubs[recipeId] = { protein, swapTo };
-      this._saveRecipeSubs();
-
-      // Update recipe's ingredient lists
-      recipe.missingIngredients = (recipe.missingIngredients || [])
-        .map(i => i.toLowerCase() === protein ? swapTo : i);
-      recipe.matchedIngredients = (recipe.matchedIngredients || [])
-        .map(i => i.toLowerCase() === protein ? swapTo : i);
-      recipe.dietarySwap = null;
-
-      // Re-render card content
-      this._renderIngredientPanel(recipe, card);
-      const banner = card.querySelector(`#swap-banner-${recipeId}`);
-      if (banner) banner.outerHTML = `<div class="swap-memory-chip">💾 Applied: ${protein} → ${swapTo}</div>`;
-
-      if (typeof App !== 'undefined') App._showToast(`✅ Swapped ${protein} → ${swapTo}`, 'success');
-    });
-
     return card;
   },
 
@@ -537,9 +630,22 @@ const MealPlanner = {
 
     contentEl.innerHTML = '';
 
-    const matched = recipe.matchedIngredients || [];
-    const missing = recipe.missingIngredients || [];
-    const pantry  = recipe.pantryIngredients  || [];
+    const { servings, matched, missing, pantry } = this._getRecipeServingsAndIngredients(recipe);
+
+    // Update gap badge dynamically
+    const badge = card.querySelector('.ingredient-gap-badge');
+    if (badge) {
+      if (missing.length > 0) {
+        badge.className = 'ingredient-gap-badge';
+        badge.textContent = `🟡 ${missing.length} missing · tap to review`;
+      } else {
+        badge.className = 'ingredient-gap-badge none';
+        badge.textContent = '✅ All ingredients available';
+      }
+    }
+
+    // ── Render Family Servings ──
+    this._renderFamilyServings(recipe, servings, card);
 
     // ── Section: You Have ──
     if (matched.length > 0) {
@@ -574,17 +680,21 @@ const MealPlanner = {
         const chip = document.createElement('span');
         chip.className = 'ingredient-chip missing';
 
-        // Check if there's a remembered swap for this ingredient
+        // Check who needs this missing item
+        const users = servings.filter(s => s.eating.toLowerCase() === ing.toLowerCase()).map(s => s.personName);
+        const suffix = users.length > 0 ? ` (for ${users.join('/')})` : '';
+        const displayLabel = `${ing}${suffix}`;
+
         const remembered = this.swapMemory[ing.toLowerCase()];
 
         if (remembered) {
-          chip.innerHTML = `<span style="text-decoration: line-through; opacity: 0.6">${ing}</span> → ${remembered} <span class="swap-memory-chip" style="display:inline;padding:0.1rem 0.3rem;font-size:0.65rem">💾</span>`;
+          chip.innerHTML = `<span style="text-decoration: line-through; opacity: 0.6">${displayLabel}</span> → ${remembered} <span class="swap-memory-chip" style="display:inline;padding:0.1rem 0.3rem;font-size:0.65rem">💾</span>`;
           chip.classList.add('ingredient-chip', 'have');
           chip.style.background = 'hsl(160, 55%, 12%)';
           chip.style.borderColor = 'hsl(160, 55%, 24%)';
           chip.style.color = 'hsl(160, 75%, 60%)';
         } else {
-          chip.innerHTML = `${ing} <button class="swap-btn" data-ing="${ing}">Swap ↔</button>`;
+          chip.innerHTML = `${displayLabel} <button class="swap-btn" data-ing="${ing}">Swap ↔</button>`;
 
           // Swap popover
           chip.querySelector('.swap-btn')?.addEventListener('click', (e) => {
@@ -649,13 +759,13 @@ const MealPlanner = {
     if (addAllBtn) {
       addAllBtn.onclick = (e) => {
         e.stopPropagation();
-        const toAdd = (recipe.missingIngredients || []).map(ing => ({
+        const toAdd = missing.map(ing => ({
           name: this.swapMemory[ing.toLowerCase()] || ing,
           fromRecipe: recipe.name
         }));
         if (typeof ShoppingList !== 'undefined' && toAdd.length > 0) {
           ShoppingList.addItems(toAdd);
-          addAllBtn.textContent = `✅ ${toAdd.length} item${toAdd.length !== 1 ? 's' : ''} added to list!`;
+          addAllBtn.textContent = `✅ ${toAdd.length} items added to list!`;
           addAllBtn.disabled = true;
           // Refresh + buttons
           this._renderIngredientPanel(recipe, card);
@@ -665,11 +775,134 @@ const MealPlanner = {
     }
   },
 
+  /**
+   * Render the household servings list on the meal card.
+   * @private
+   */
+  _renderFamilyServings(recipe, servings, cardEl) {
+    const servingsEl = cardEl.querySelector(`#family-servings-${recipe.id}`);
+    if (!servingsEl) return;
+    
+    if (!servings || servings.length === 0) {
+      servingsEl.style.display = 'none';
+      return;
+    }
+    
+    servingsEl.style.display = 'block';
+    servingsEl.innerHTML = `
+      <div class="servings-header">
+        <span class="servings-icon">👤</span>
+        <span class="servings-title">Family Servings</span>
+      </div>
+      <div class="servings-list"></div>
+    `;
+    
+    const listEl = servingsEl.querySelector('.servings-list');
+    
+    servings.forEach(srv => {
+      const row = document.createElement('div');
+      row.className = 'serving-row';
+      
+      const badgeText = srv.isSwapped 
+        ? `<span class="serving-badge swap">🌱 Swapped to ${srv.eating}</span>`
+        : `<span class="serving-badge standard">✅ Eating standard</span>`;
+      
+      const warningText = srv.allergenWarning 
+        ? `<span class="serving-warning">${srv.allergenWarning}</span>`
+        : '';
+        
+      row.innerHTML = `
+        <div class="serving-row-info">
+          <span class="serving-person-name">${srv.personName} (${srv.dietLabel})</span>
+          <span class="serving-eating-text">— eating: <strong>${srv.eating || recipe.name}</strong></span>
+          ${badgeText}
+          ${warningText}
+        </div>
+        ${srv.originalProtein ? `<button class="btn-serving-swap" data-person="${srv.personName}">swap ↔</button>` : ''}
+      `;
+      
+      row.querySelector('.btn-serving-swap')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this._openServingSwapPopover(recipe, srv, e.target, cardEl);
+      });
+      
+      listEl.appendChild(row);
+    });
+  },
+
+  /**
+   * Open the custom serving protein substitution dropdown.
+   * @private
+   */
+  _openServingSwapPopover(recipe, serving, triggerEl, cardEl) {
+    document.querySelectorAll('.swap-popover').forEach(p => p.remove());
+    
+    const popover = document.createElement('div');
+    popover.className = 'swap-popover serving-swap-popover';
+    
+    const wrapper = document.createElement('div');
+    wrapper.style.position = 'relative';
+    wrapper.style.display = 'inline-block';
+    triggerEl.parentNode.insertBefore(wrapper, triggerEl);
+    wrapper.appendChild(triggerEl);
+    wrapper.appendChild(popover);
+    
+    serving.swapOptions.forEach(opt => {
+      const row = document.createElement('div');
+      row.className = 'swap-option-row';
+      
+      const isCurrent = opt.toLowerCase() === serving.eating.toLowerCase();
+      row.innerHTML = `
+        <span class="swap-option-name" style="${isCurrent ? 'font-weight: 700; color: hsl(258, 85%, 80%)' : ''}">
+          ${opt} ${isCurrent ? '✓' : ''}
+        </span>
+      `;
+      
+      row.addEventListener('click', (e) => {
+        e.stopPropagation();
+        
+        if (!this.personalSwaps[recipe.id]) {
+          this.personalSwaps[recipe.id] = {};
+        }
+        this.personalSwaps[recipe.id][serving.personName] = opt;
+        this._savePersonalSwaps();
+        
+        popover.remove();
+        if (triggerEl.parentNode === wrapper) {
+          wrapper.parentNode.insertBefore(triggerEl, wrapper);
+          wrapper.remove();
+        }
+        
+        this._renderIngredientPanel(recipe, cardEl);
+        
+        if (typeof App !== 'undefined') {
+          App._showToast(`Swapped ${serving.personName} to ${opt}`, 'success');
+        }
+      });
+      
+      popover.appendChild(row);
+    });
+    
+    const closePopover = (e) => {
+      if (!popover.contains(e.target)) {
+        popover.remove();
+        if (triggerEl.parentNode === wrapper) {
+          wrapper.parentNode.insertBefore(triggerEl, wrapper);
+          wrapper.remove();
+        }
+        document.removeEventListener('click', closePopover);
+      }
+    };
+    setTimeout(() => document.addEventListener('click', closePopover), 50);
+  },
+
   /** @private Update the "Add all" button text based on current shopping list state */
   _updateAddAllBtn(recipe, card) {
     const addAllBtn = card.querySelector(`#add-all-${recipe.id}`);
     if (!addAllBtn) return;
-    const missing = recipe.missingIngredients || [];
+    
+    const { missing } = this._getRecipeServingsAndIngredients(recipe);
+    
     if (missing.length === 0) {
       addAllBtn.textContent = '✅ Nothing missing for this meal';
       addAllBtn.disabled = true;
@@ -860,5 +1093,30 @@ const MealPlanner = {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  },
+
+  /**
+   * Load custom personal swaps from localStorage.
+   * @private
+   */
+  _loadPersonalSwaps() {
+    try {
+      const s = localStorage.getItem('wfd_personal_swaps');
+      this.personalSwaps = s ? JSON.parse(s) : {};
+    } catch (e) {
+      this.personalSwaps = {};
+    }
+  },
+
+  /**
+   * Save custom personal swaps to localStorage.
+   * @private
+   */
+  _savePersonalSwaps() {
+    try {
+      localStorage.setItem('wfd_personal_swaps', JSON.stringify(this.personalSwaps));
+    } catch (e) {
+      console.warn('Could not save personal swaps:', e);
+    }
   }
 };
