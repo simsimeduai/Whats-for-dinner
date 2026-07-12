@@ -118,6 +118,9 @@ const CuisinePicker = {
   /** @type {Array} Household dietary profiles */
   _profiles: [],
 
+  /** @type {number|null} Index of the currently expanded profile editor */
+  _expandedProfileIdx: null,
+
   /* ------------------------------------------------------------------ */
   /*  Public API                                                         */
   /* ------------------------------------------------------------------ */
@@ -421,13 +424,13 @@ const CuisinePicker = {
 
     section.innerHTML = `
       <div class="dietary-header">
-        <h3 class="dietary-title">👨‍👩‍👧 Who's eating?</h3>
-        <p class="dietary-subtitle">Add dietary needs per person — we'll suggest smart recipe swaps</p>
+        <h3 class="dietary-title">🍽️ Personal Preferences</h3>
+        <p class="dietary-subtitle">Add dietary needs for yourself or household members</p>
       </div>
       <div class="profiles-list" id="profiles-list"></div>
-      <button class="btn-add-person" id="btn-add-person" aria-label="Add person">
+      <button class="btn-add-person" id="btn-add-person" aria-label="Add dietary profile">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-        Add Person
+        Add Dietary Profile
       </button>
     `;
     container.appendChild(section);
@@ -438,6 +441,8 @@ const CuisinePicker = {
       const name = `Person ${this._profiles.length + 1}`;
       this._profiles.push({ name, dietaryFlags: [], allergies: [] });
       this._saveProfiles();
+      // Auto-expand the newly created profile
+      this._expandedProfileIdx = this._profiles.length - 1;
       this._renderProfiles();
     });
   },
@@ -476,104 +481,161 @@ const CuisinePicker = {
     }
 
     this._profiles.forEach((profile, profileIdx) => {
-      const card = document.createElement('div');
-      card.className = 'profile-card';
-      card.dataset.profileIdx = profileIdx;
+      // Check if this profile index is currently expanded
+      if (profileIdx === this._expandedProfileIdx) {
+        const card = document.createElement('div');
+        card.className = 'profile-card expanded';
+        card.dataset.profileIdx = profileIdx;
 
-      // Name row
-      const nameRow = document.createElement('div');
-      nameRow.className = 'profile-name-row';
-      nameRow.innerHTML = `
-        <span class="profile-avatar">${profile.name.charAt(0).toUpperCase()}</span>
-        <input type="text" class="profile-name-input" value="${profile.name}" placeholder="Name" aria-label="Person name" />
-        <button class="profile-remove-btn" aria-label="Remove ${profile.name}">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-        </button>
-      `;
-      card.appendChild(nameRow);
+        // Name row
+        const nameRow = document.createElement('div');
+        nameRow.className = 'profile-name-row';
+        nameRow.innerHTML = `
+          <span class="profile-avatar">${profile.name.charAt(0).toUpperCase()}</span>
+          <input type="text" class="profile-name-input" value="${profile.name}" placeholder="Name" aria-label="Person name" />
+          <button class="profile-remove-btn" aria-label="Remove ${profile.name}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        `;
+        card.appendChild(nameRow);
 
-      // Name input
-      nameRow.querySelector('.profile-name-input').addEventListener('input', (e) => {
-        this._profiles[profileIdx].name = e.target.value || `Person ${profileIdx + 1}`;
-        this._saveProfiles();
-      });
+        // Name input listener
+        nameRow.querySelector('.profile-name-input').addEventListener('input', (e) => {
+          this._profiles[profileIdx].name = e.target.value || `Person ${profileIdx + 1}`;
+          this._saveProfiles();
+        });
 
-      // Remove button
-      nameRow.querySelector('.profile-remove-btn').addEventListener('click', () => {
-        this._profiles.splice(profileIdx, 1);
-        this._saveProfiles();
-        this._renderProfiles();
-      });
-
-      // Diet chips
-      const chipsRow = document.createElement('div');
-      chipsRow.className = 'diet-chips-row';
-      DIET_OPTIONS.forEach(opt => {
-        const chip = document.createElement('button');
-        chip.className = 'diet-chip' + (profile.dietaryFlags.includes(opt.id) ? ' selected' : '');
-        chip.type = 'button';
-        chip.dataset.flag = opt.id;
-        chip.innerHTML = `<span class="diet-emoji">${opt.emoji}</span> ${opt.label}`;
-        chip.setAttribute('aria-pressed', String(profile.dietaryFlags.includes(opt.id)));
-        chip.addEventListener('click', () => {
-          if (opt.id === 'no-restrictions') {
-            this._profiles[profileIdx].dietaryFlags = [];
-          } else {
-            const idx = this._profiles[profileIdx].dietaryFlags.indexOf(opt.id);
-            if (idx >= 0) {
-              this._profiles[profileIdx].dietaryFlags.splice(idx, 1);
-            } else {
-              this._profiles[profileIdx].dietaryFlags.push(opt.id);
-            }
-          }
+        // Remove button listener
+        nameRow.querySelector('.profile-remove-btn').addEventListener('click', () => {
+          this._profiles.splice(profileIdx, 1);
+          this._expandedProfileIdx = null;
           this._saveProfiles();
           this._renderProfiles();
         });
-        chipsRow.appendChild(chip);
-      });
-      card.appendChild(chipsRow);
 
-      // Allergies section
-      const allergySection = document.createElement('div');
-      allergySection.className = 'allergy-section';
-      allergySection.innerHTML = `
-        <details class="allergy-details">
-          <summary class="allergy-summary">🚫 Allergies & Intolerances ${profile.allergies.length > 0 ? '<span class="allergy-count">' + profile.allergies.length + '</span>' : ''}</summary>
-          <div class="allergy-body">
-            <div class="allergy-tags" id="allergy-tags-${profileIdx}"></div>
-            <div class="allergy-add-row">
-              <input type="text" class="allergy-input" id="allergy-input-${profileIdx}" placeholder="e.g. shellfish, tree nuts..." />
-              <button class="btn-add-allergy" id="btn-add-allergy-${profileIdx}">Add</button>
+        // Diet chips
+        const chipsRow = document.createElement('div');
+        chipsRow.className = 'diet-chips-row';
+        DIET_OPTIONS.forEach(opt => {
+          const chip = document.createElement('button');
+          chip.className = 'diet-chip' + (profile.dietaryFlags.includes(opt.id) ? ' selected' : '');
+          chip.type = 'button';
+          chip.dataset.flag = opt.id;
+          chip.innerHTML = `<span class="diet-emoji">${opt.emoji}</span> ${opt.label}`;
+          chip.setAttribute('aria-pressed', String(profile.dietaryFlags.includes(opt.id)));
+          chip.addEventListener('click', () => {
+            if (opt.id === 'no-restrictions') {
+              this._profiles[profileIdx].dietaryFlags = [];
+            } else {
+              const idx = this._profiles[profileIdx].dietaryFlags.indexOf(opt.id);
+              if (idx >= 0) {
+                this._profiles[profileIdx].dietaryFlags.splice(idx, 1);
+              } else {
+                this._profiles[profileIdx].dietaryFlags.push(opt.id);
+              }
+            }
+            this._saveProfiles();
+            this._renderProfiles();
+          });
+          chipsRow.appendChild(chip);
+        });
+        card.appendChild(chipsRow);
+
+        // Allergies section
+        const allergySection = document.createElement('div');
+        allergySection.className = 'allergy-section';
+        allergySection.innerHTML = `
+          <details class="allergy-details" open>
+            <summary class="allergy-summary">🚫 Allergies & Intolerances ${profile.allergies.length > 0 ? '<span class="allergy-count">' + profile.allergies.length + '</span>' : ''}</summary>
+            <div class="allergy-body">
+              <div class="allergy-tags" id="allergy-tags-${profileIdx}"></div>
+              <div class="allergy-add-row">
+                <input type="text" class="allergy-input" id="allergy-input-${profileIdx}" placeholder="e.g. shellfish, tree nuts..." />
+                <button class="btn-add-allergy" id="btn-add-allergy-${profileIdx}">Add</button>
+              </div>
             </div>
-          </div>
-        </details>
-      `;
-      card.appendChild(allergySection);
+          </details>
+        `;
+        card.appendChild(allergySection);
 
-      list.appendChild(card);
-
-      // Render allergy tags
-      this._renderAllergyTags(profileIdx);
-
-      // Allergy add
-      document.getElementById(`btn-add-allergy-${profileIdx}`)?.addEventListener('click', () => {
-        const input = document.getElementById(`allergy-input-${profileIdx}`);
-        const val = input?.value.trim().toLowerCase();
-        if (val && !this._profiles[profileIdx].allergies.includes(val)) {
-          this._profiles[profileIdx].allergies.push(val);
-          this._saveProfiles();
+        // Done button row
+        const doneRow = document.createElement('div');
+        doneRow.className = 'profile-done-row';
+        doneRow.style.display = 'flex';
+        doneRow.style.marginTop = '0.5rem';
+        doneRow.innerHTML = `<button class="btn btn-primary btn-profile-done" style="margin-left: auto; padding: 0.4rem 1rem; font-size: 0.8rem;">Done ✓</button>`;
+        doneRow.querySelector('.btn-profile-done').addEventListener('click', () => {
+          this._expandedProfileIdx = null;
           this._renderProfiles();
-        } else if (input) {
-          input.value = '';
-        }
-      });
+        });
+        card.appendChild(doneRow);
 
-      document.getElementById(`allergy-input-${profileIdx}`)?.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          document.getElementById(`btn-add-allergy-${profileIdx}`)?.click();
-        }
-      });
+        list.appendChild(card);
+
+        // Render allergy tags
+        this._renderAllergyTags(profileIdx);
+
+        // Allergy add listeners
+        document.getElementById(`btn-add-allergy-${profileIdx}`)?.addEventListener('click', () => {
+          const input = document.getElementById(`allergy-input-${profileIdx}`);
+          const val = input?.value.trim().toLowerCase();
+          if (val && !this._profiles[profileIdx].allergies.includes(val)) {
+            this._profiles[profileIdx].allergies.push(val);
+            this._saveProfiles();
+            this._renderProfiles();
+          } else if (input) {
+            input.value = '';
+          }
+        });
+
+        document.getElementById(`allergy-input-${profileIdx}`)?.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            document.getElementById(`btn-add-allergy-${profileIdx}`)?.click();
+          }
+        });
+      } else {
+        // Collapsed capsule view
+        const capsule = document.createElement('div');
+        capsule.className = 'profile-capsule';
+        capsule.setAttribute('role', 'button');
+        capsule.setAttribute('tabindex', '0');
+        capsule.setAttribute('aria-label', `Edit profile for ${profile.name}`);
+
+        // Build summary text
+        const dietsText = profile.dietaryFlags.map(f => {
+          const option = DIET_OPTIONS.find(o => o.id === f);
+          return option ? option.label : f;
+        });
+        const allergiesText = profile.allergies.map(a => `no ${a}`);
+        const mergedSummary = [...dietsText, ...allergiesText].join(', ');
+        const summaryText = mergedSummary || 'No Restrictions';
+
+        capsule.innerHTML = `
+          <div class="capsule-avatar">${profile.name.charAt(0).toUpperCase()}</div>
+          <div class="capsule-details">
+            <span class="capsule-name">${profile.name}</span>
+            <span class="capsule-divider">:</span>
+            <span class="capsule-summary">${summaryText}</span>
+          </div>
+          <span class="capsule-edit-icon">✎</span>
+        `;
+
+        capsule.addEventListener('click', () => {
+          this._expandedProfileIdx = profileIdx;
+          this._renderProfiles();
+        });
+
+        capsule.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            this._expandedProfileIdx = profileIdx;
+            this._renderProfiles();
+          }
+        });
+
+        list.appendChild(capsule);
+      }
     });
   },
 
