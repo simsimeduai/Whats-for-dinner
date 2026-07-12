@@ -8,24 +8,24 @@
    -------------------------------------------------------------------------- */
 :root {
   /* Backgrounds */
-  --bg-primary: hsl(230, 25%, 8%);
-  --bg-secondary: hsl(230, 22%, 12%);
-  --bg-card: hsla(230, 20%, 14%, 0.65);
-  --bg-card-hover: hsla(230, 20%, 18%, 0.75);
+  --bg-primary: #F3F4F6;
+  --bg-secondary: hsla(0, 0%, 100%, 0.2);
+  --bg-card: hsla(0, 0%, 100%, 0.1);
+  --bg-card-hover: hsla(0, 0%, 100%, 0.25);
 
   /* Accents */
-  --accent-gradient: linear-gradient(135deg, hsl(340, 85%, 55%), hsl(30, 95%, 55%));
-  --accent-primary: hsl(340, 85%, 55%);
-  --accent-secondary: hsl(30, 95%, 55%);
-  --accent-success: hsl(160, 70%, 45%);
+  --accent-gradient: linear-gradient(135deg, #87CEEB, #66C2FF);
+  --accent-primary: #87CEEB;
+  --accent-secondary: #66C2FF;
+  --accent-success: hsl(152, 69%, 31%);
 
   /* Text */
-  --text-primary: hsl(0, 0%, 95%);
-  --text-secondary: hsl(230, 15%, 70%);
-  --text-muted: hsl(230, 15%, 45%);
+  --text-primary: #000000;
+  --text-secondary: #333333;
+  --text-muted: #555555;
 
   /* Borders */
-  --border-subtle: hsla(230, 20%, 30%, 0.4);
+  --border-subtle: hsla(0, 0%, 0%, 0.1);
 
   /* Radii */
   --radius-sm: 8px;
@@ -34,7 +34,7 @@
   --radius-full: 9999px;
 
   /* Shadows */
-  --shadow-glow: 0 0 30px hsla(340, 85%, 55%, 0.15);
+  --shadow-glow: 0 0 30px hsla(200, 70%, 75%, 0.15);
 
   /* Typography */
   --font: 'Outfit', sans-serif;
@@ -46,7 +46,7 @@
 
   /* Meal-type accent colours */
   --meal-breakfast: hsl(40, 90%, 55%);
-  --meal-lunch: hsl(160, 70%, 45%);
+  --meal-lunch: hsl(152, 69%, 45%);
   --meal-dinner: hsl(270, 65%, 55%);
 }
 
@@ -70,40 +70,13 @@ html {
 
 body {
   font-family: var(--font);
-  background: var(--bg-primary);
+  background: linear-gradient(hsla(210, 20%, 96%, 0.88), hsla(210, 20%, 96%, 0.88)), url('../Pictures/jimmy-dean-Yl7Y8DhyzyY-unsplash.jpg') no-repeat center center fixed;
+  background-size: cover;
   color: var(--text-primary);
   line-height: 1.6;
   min-height: 100vh;
   overflow-x: hidden;
   position: relative;
-}
-
-/* Subtle ambient gradient blobs behind content */
-body::before,
-body::after {
-  content: '';
-  position: fixed;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 0;
-  filter: blur(120px);
-  opacity: 0.35;
-}
-
-body::before {
-  width: 600px;
-  height: 600px;
-  background: hsla(340, 85%, 55%, 0.12);
-  top: -10%;
-  left: -8%;
-}
-
-body::after {
-  width: 500px;
-  height: 500px;
-  background: hsla(30, 95%, 55%, 0.10);
-  bottom: -10%;
-  right: -8%;
 }
 
 a {
@@ -151,22 +124,22 @@ input, textarea, select {
 }
 
 ::-webkit-scrollbar-track {
-  background: hsla(230, 20%, 14%, 0.4);
+  background: hsla(0, 0%, 100%, 0.4);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsla(340, 85%, 55%, 0.35);
+  background: hsla(200, 70%, 75%, 0.35);
   border-radius: var(--radius-full);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsla(340, 85%, 55%, 0.55);
+  background: hsla(200, 70%, 75%, 0.55);
 }
 
 /* Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: hsla(340, 85%, 55%, 0.35) hsla(230, 20%, 14%, 0.4);
+  scrollbar-color: hsla(200, 70%, 75%, 0.35) hsla(0, 0%, 100%, 0.4);
 }
 
 /* --------------------------------------------------------------------------
@@ -176,7 +149,7 @@ input, textarea, select {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: hsla(230, 25%, 8%, 0.75);
+  background: hsla(0, 0%, 100%, 0.4);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border-subtle);
@@ -417,13 +390,13 @@ input, textarea, select {
 .input-method-card:hover {
   transform: translateY(-4px);
   background: var(--bg-card-hover);
-  border-color: hsla(340, 85%, 55%, 0.25);
-  box-shadow: 0 8px 32px hsla(340, 85%, 55%, 0.08);
+  border-color: hsla(200, 70%, 75%, 0.25);
+  box-shadow: 0 8px 32px hsla(200, 70%, 75%, 0.08);
 }
 
 .input-method-card.active {
   border-color: var(--accent-primary);
-  box-shadow: 0 0 24px hsla(340, 85%, 55%, 0.2), inset 0 0 0 1px var(--accent-primary);
+  box-shadow: 0 0 24px hsla(200, 70%, 75%, 0.2), inset 0 0 0 1px var(--accent-primary);
 }
 
 .input-method-card.active::before {
@@ -497,7 +470,7 @@ input, textarea, select {
 
 .search-input:focus {
   border-color: var(--accent-primary);
-  box-shadow: 0 0 0 3px hsla(340, 85%, 55%, 0.12);
+  box-shadow: 0 0 0 3px hsla(200, 70%, 75%, 0.12);
 }
 
 .btn-add {
@@ -537,7 +510,7 @@ input, textarea, select {
 }
 
 .autocomplete-option:hover {
-  background: hsla(340, 85%, 55%, 0.1);
+  background: hsla(200, 70%, 75%, 0.1);
 }
 
 .autocomplete-option + .autocomplete-option {
@@ -580,7 +553,7 @@ input, textarea, select {
 }
 
 .suggestion-chip:hover:not(.added) {
-  background: hsla(340, 85%, 55%, 0.1);
+  background: hsla(200, 70%, 75%, 0.1);
   border-color: var(--accent-primary);
   color: var(--text-primary);
 }
@@ -686,7 +659,7 @@ input, textarea, select {
 .dropzone:hover,
 .dropzone.dragover {
   border-color: var(--accent-primary);
-  background: hsla(340, 85%, 55%, 0.04);
+  background: hsla(200, 70%, 75%, 0.04);
 }
 
 .dropzone-icon {
@@ -784,7 +757,7 @@ input, textarea, select {
 }
 
 .ocr-item:hover {
-  background: hsla(230, 20%, 18%, 0.4);
+  background: hsla(0, 0%, 100%, 0.4);
 }
 
 .ocr-item:last-child {
@@ -868,7 +841,7 @@ input, textarea, select {
 
 .cuisine-card.selected {
   border-color: var(--accent-primary);
-  box-shadow: 0 0 20px hsla(340, 85%, 55%, 0.18);
+  box-shadow: 0 0 20px hsla(200, 70%, 75%, 0.18);
 }
 
 /* Checkmark badge overlay on selected */
@@ -958,7 +931,7 @@ input, textarea, select {
 .cuisine-toggle-all:hover {
   border-color: var(--accent-primary);
   color: var(--text-primary);
-  background: hsla(340, 85%, 55%, 0.06);
+  background: hsla(200, 70%, 75%, 0.06);
 }
 
 .cuisine-warning {
@@ -1010,32 +983,89 @@ input, textarea, select {
   gap: 0.5rem;
 }
 
-.meal-plan-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
+.meal-plan-list {
+  display: flex;
+  flex-direction: column;
   gap: 1rem;
-  overflow-x: auto;
-  padding-bottom: 1rem;
+  padding-bottom: 2rem;
 }
 
-.day-column {
-  min-width: 155px;
+.day-block {
+  background: var(--bg-card);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: border-color var(--transition-normal);
+}
+.day-block:hover {
+  border-color: hsla(209, 62%, 50%, 0.3);
 }
 
-.day-header {
-  font-size: 0.9rem;
+.day-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  background: hsla(225, 12%, 18%, 0.1);
+  transition: background 0.2s;
+}
+.day-block-header:hover {
+  background: hsla(225, 12%, 18%, 0.2);
+}
+
+.day-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.day-name-full {
+  font-size: 1.1rem;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-secondary);
-  margin-bottom: 0.75rem;
-  text-align: center;
-  padding-bottom: 0.5rem;
-  border-bottom: 2px solid var(--border-subtle);
+  color: var(--text-primary);
+}
+.day-name-short {
+  display: none;
 }
 
-.day-short {
+.day-missing-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 2rem;
+  background: hsla(0, 60%, 55%, 0.15);
+  color: hsl(0, 65%, 45%);
+  border: 1px solid hsla(0, 60%, 55%, 0.25);
+}
+.day-missing-badge.none {
+  background: hsla(160, 70%, 45%, 0.15);
+  color: hsl(160, 75%, 35%);
+  border-color: hsla(160, 70%, 45%, 0.25);
+}
+
+.day-chevron {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: var(--text-muted);
+}
+
+.day-block-body {
   display: none;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  padding: 1.25rem;
+  border-top: 1px solid var(--border-subtle);
+}
+.day-block-body.open {
+  display: grid;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* Individual meal card */
@@ -1048,7 +1078,8 @@ input, textarea, select {
   padding: 0;
   position: relative;
   overflow: hidden;
-  margin-bottom: 0.75rem;
+  display: flex;
+  flex-direction: column;
   transition:
     transform var(--transition-normal),
     box-shadow var(--transition-normal);
@@ -1082,6 +1113,9 @@ input, textarea, select {
 
 .meal-content {
   padding: 0.75rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .meal-name {
@@ -1104,7 +1138,7 @@ input, textarea, select {
   font-size: 0.7rem;
   font-weight: 500;
   color: var(--text-muted);
-  background: hsla(230, 20%, 20%, 0.6);
+  background: hsla(0, 0%, 100%, 0.5);
   padding: 0.15rem 0.5rem;
   border-radius: var(--radius-full);
 }
@@ -1132,7 +1166,7 @@ input, textarea, select {
 .meal-match-bar {
   width: 100%;
   height: 4px;
-  background: hsla(230, 20%, 20%, 0.6);
+  background: hsla(0, 0%, 100%, 0.5);
   border-radius: var(--radius-full);
   overflow: hidden;
   margin-bottom: 0.3rem;
@@ -1155,6 +1189,7 @@ input, textarea, select {
   display: flex;
   flex-wrap: wrap;
   gap: 0.25rem;
+  margin-top: auto;
 }
 
 .ingredient {
@@ -1234,12 +1269,12 @@ input, textarea, select {
   background: var(--accent-gradient);
   color: #fff;
   border: none;
-  box-shadow: 0 4px 16px hsla(340, 85%, 55%, 0.2);
+  box-shadow: 0 4px 16px hsla(200, 70%, 75%, 0.2);
 }
 
 .btn-primary:hover {
   filter: brightness(1.12);
-  box-shadow: 0 6px 24px hsla(340, 85%, 55%, 0.3);
+  box-shadow: 0 6px 24px hsla(200, 70%, 75%, 0.3);
 }
 
 /* Secondary — outlined */
@@ -1250,7 +1285,7 @@ input, textarea, select {
 }
 
 .btn-secondary:hover {
-  background: hsla(340, 85%, 55%, 0.1);
+  background: hsla(200, 70%, 75%, 0.1);
   border-color: var(--accent-secondary);
   color: var(--accent-secondary);
 }
@@ -1274,7 +1309,7 @@ input, textarea, select {
   left: 0;
   right: 0;
   z-index: 100;
-  background: hsla(230, 25%, 8%, 0.85);
+  background: hsla(0, 0%, 100%, 0.5);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid var(--border-subtle);
@@ -1400,10 +1435,10 @@ input, textarea, select {
 
 @keyframes glowPulse {
   0%, 100% {
-    box-shadow: 0 0 20px hsla(340, 85%, 55%, 0.15);
+    box-shadow: 0 0 20px hsla(200, 70%, 75%, 0.15);
   }
   50% {
-    box-shadow: 0 0 36px hsla(340, 85%, 55%, 0.3);
+    box-shadow: 0 0 36px hsla(200, 70%, 75%, 0.3);
   }
 }
 
@@ -1431,16 +1466,7 @@ input, textarea, select {
     grid-template-columns: repeat(3, 1fr);
   }
 
-  .meal-plan-grid {
-    grid-template-columns: repeat(7, minmax(150px, 1fr));
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-  }
 
-  .day-column {
-    scroll-snap-align: start;
-  }
 }
 
 /* --------------------------------------------------------------------------
@@ -1514,28 +1540,20 @@ input, textarea, select {
     font-size: 2.25rem;
   }
 
-  /* Meal plan → horizontal scroll */
-  .meal-plan-grid {
-    grid-template-columns: repeat(7, minmax(140px, 1fr));
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-    gap: 0.75rem;
-    padding-bottom: 0.75rem;
+  .day-block-body.open {
+    display: flex;
+    flex-direction: column;
   }
-
-  .day-column {
-    min-width: 140px;
-    scroll-snap-align: start;
-  }
-
-  /* Show short day names, hide full names */
-  .day-name {
+  
+  .day-name-full {
     display: none;
   }
-
-  .day-short {
+  
+  .day-name-short {
     display: inline;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
   }
 
   /* Nav footer — stack buttons on small screens */
@@ -1584,9 +1602,7 @@ input, textarea, select {
     display: none;
   }
 
-  .meal-plan-grid {
-    grid-template-columns: repeat(7, minmax(125px, 1fr));
-  }
+
 
   .stepper-line {
     left: 10%;
@@ -1634,26 +1650,31 @@ input, textarea, select {
     margin: 0;
   }
 
-  .meal-plan-grid {
-    display: table;
-    width: 100%;
-    border-collapse: collapse;
-    overflow: visible;
+  .meal-plan-list {
+    display: block;
   }
-
-  .day-column {
-    display: table-cell;
-    vertical-align: top;
-    border: 1px solid #ccc;
-    padding: 0.5rem;
-    min-width: auto;
+  
+  .day-block {
+    margin-bottom: 2rem;
+    border: none;
+    page-break-inside: avoid;
   }
-
-  .day-header {
+  
+  .day-block-header {
     border-bottom: 2px solid #000;
-    font-size: 10pt;
-    margin-bottom: 0.5rem;
-    padding-bottom: 0.25rem;
+    background: transparent !important;
+    padding: 0.5rem 0;
+  }
+  
+  .day-block-body {
+    display: flex !important;
+    flex-direction: row;
+    gap: 1rem;
+    border: none;
+  }
+  
+  .day-chevron {
+    display: none;
   }
 
   .day-name {
@@ -1753,3 +1774,1002 @@ input, textarea, select {
 /* ========================================================================
    END OF STYLESHEET
    ======================================================================== */
+
+/* ════════════════════════════════════════════════════════════════════════
+   PANTRY STAPLES SECTION (Step 1)
+   ════════════════════════════════════════════════════════════════════════ */
+
+.pantry-staples-section {
+  margin-top: 2rem;
+  padding: 1.25rem 1.5rem;
+  background: hsl(225, 12%, 14%);
+  border: 1px solid hsl(225, 12%, 22%);
+  border-radius: 1rem;
+}
+
+.pantry-staples-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.pantry-staples-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.pantry-icon { font-size: 1.2rem; }
+
+.pantry-staples-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: hsl(220, 15%, 92%);
+  margin: 0;
+}
+
+.pantry-staples-hint {
+  font-size: 0.75rem;
+  color: hsl(220, 10%, 55%);
+  font-style: italic;
+}
+
+.btn-reset-staples {
+  font-size: 0.7rem;
+  color: hsl(220, 10%, 45%);
+  background: none;
+  border: 1px solid hsl(225, 12%, 28%);
+  border-radius: 0.5rem;
+  padding: 0.25rem 0.6rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.2s, border-color 0.2s;
+}
+.btn-reset-staples:hover { color: hsl(220, 15%, 70%); border-color: hsl(225, 12%, 40%); }
+
+.pantry-chips-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.875rem;
+  min-height: 2rem;
+}
+
+.pantry-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.6rem 0.3rem 0.75rem;
+  background: hsl(258, 40%, 22%);
+  border: 1px solid hsl(258, 40%, 35%);
+  border-radius: 2rem;
+  font-size: 0.78rem;
+  color: hsl(258, 80%, 85%);
+  transition: background 0.15s;
+}
+
+.pantry-chip-label { line-height: 1; }
+
+.pantry-chip-remove {
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: hsl(258, 50%, 65%);
+  padding: 0;
+  transition: color 0.15s;
+}
+.pantry-chip-remove:hover { color: hsl(0, 65%, 65%); }
+
+.pantry-add-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.pantry-add-input {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  background: hsl(225, 12%, 11%);
+  border: 1px solid hsl(225, 12%, 28%);
+  border-radius: 0.6rem;
+  color: hsl(220, 15%, 88%);
+  font-size: 0.82rem;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+.pantry-add-input::placeholder { color: hsl(220, 10%, 40%); }
+.pantry-add-input:focus { outline: none; border-color: hsl(258, 60%, 55%); }
+
+.btn-add-staple {
+  padding: 0.5rem 1rem;
+  background: hsl(258, 55%, 38%);
+  border: none;
+  border-radius: 0.6rem;
+  color: hsl(258, 90%, 95%);
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+.btn-add-staple:hover { background: hsl(258, 60%, 48%); }
+
+/* ════════════════════════════════════════════════════════════════════════
+   DIETARY PROFILES SECTION (Step 2)
+   ════════════════════════════════════════════════════════════════════════ */
+
+.dietary-section {
+  margin-top: 1.5rem;
+  margin-bottom: 2.25rem;
+  padding: 1.25rem 1.5rem;
+  background: hsl(225, 12%, 14%);
+  border: 1px solid hsl(225, 12%, 22%);
+  border-radius: 1rem;
+}
+
+.dietary-header { margin-bottom: 1rem; }
+
+.dietary-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: hsl(220, 15%, 92%);
+  margin: 0 0 0.25rem;
+}
+
+.dietary-subtitle {
+  font-size: 0.82rem;
+  color: hsl(220, 10%, 55%);
+  margin: 0;
+}
+
+.profiles-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.no-profiles-hint {
+  font-size: 0.85rem;
+  color: hsl(220, 10%, 50%);
+  text-align: center;
+  padding: 0.5rem 0;
+  line-height: 1.6;
+}
+
+.btn-add-person-inline {
+  background: none;
+  border: none;
+  color: hsl(258, 70%, 65%);
+  cursor: pointer;
+  font-size: 0.85rem;
+  text-decoration: underline;
+  font-family: inherit;
+}
+
+.profile-card {
+  background: hsl(225, 12%, 18%);
+  border: 1px solid hsl(225, 12%, 26%);
+  border-radius: 0.875rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition: border-color 0.2s;
+}
+.profile-card:hover { border-color: hsl(258, 40%, 40%); }
+
+.profile-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.profile-avatar {
+  width: 2rem;
+  height: 2rem;
+  background: hsl(258, 55%, 38%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: hsl(258, 90%, 95%);
+  flex-shrink: 0;
+}
+
+.profile-name-input {
+  flex: 1;
+  background: none;
+  border: none;
+  border-bottom: 1px solid hsl(225, 12%, 30%);
+  color: hsl(220, 15%, 90%);
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: inherit;
+  padding: 0.2rem 0;
+  transition: border-color 0.2s;
+}
+.profile-name-input:focus { outline: none; border-color: hsl(258, 60%, 55%); }
+
+.profile-remove-btn {
+  background: none;
+  border: none;
+  color: hsl(220, 10%, 40%);
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  border-radius: 0.25rem;
+  transition: color 0.15s;
+}
+.profile-remove-btn:hover { color: hsl(0, 65%, 60%); }
+
+.diet-chips-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.diet-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.75rem;
+  background: hsl(225, 12%, 22%);
+  border: 1px solid hsl(225, 12%, 30%);
+  border-radius: 2rem;
+  font-size: 0.78rem;
+  color: hsl(220, 10%, 60%);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.diet-chip:hover {
+  border-color: hsl(258, 55%, 50%);
+  color: hsl(220, 15%, 85%);
+}
+.diet-chip.selected {
+  background: hsl(258, 50%, 28%);
+  border-color: hsl(258, 65%, 55%);
+  color: hsl(258, 85%, 90%);
+  box-shadow: 0 0 8px hsl(258, 60%, 40% / 0.4);
+}
+.diet-emoji { font-size: 0.9rem; }
+
+.allergy-section { margin-top: 0.25rem; }
+
+.allergy-details { cursor: pointer; }
+
+.allergy-summary {
+  font-size: 0.8rem;
+  color: hsl(220, 10%, 55%);
+  list-style: none;
+  padding: 0.25rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.allergy-summary::-webkit-details-marker { display: none; }
+
+.allergy-count {
+  background: hsl(0, 60%, 30%);
+  color: hsl(0, 80%, 85%);
+  font-size: 0.68rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 2rem;
+  font-weight: 600;
+}
+
+.allergy-body { padding: 0.5rem 0; }
+
+.allergy-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.5rem;
+}
+
+.allergy-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.5rem 0.2rem 0.65rem;
+  background: hsl(0, 40%, 22%);
+  border: 1px solid hsl(0, 40%, 32%);
+  border-radius: 2rem;
+  font-size: 0.75rem;
+  color: hsl(0, 70%, 80%);
+}
+
+.allergy-tag-remove {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: hsl(0, 50%, 60%);
+  display: flex;
+  align-items: center;
+  padding: 0;
+  transition: color 0.15s;
+}
+.allergy-tag-remove:hover { color: hsl(0, 70%, 70%); }
+
+.allergy-add-row {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.allergy-input {
+  flex: 1;
+  padding: 0.4rem 0.65rem;
+  background: hsl(225, 12%, 11%);
+  border: 1px solid hsl(225, 12%, 28%);
+  border-radius: 0.5rem;
+  color: hsl(220, 15%, 88%);
+  font-size: 0.78rem;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+.allergy-input::placeholder { color: hsl(220, 10%, 38%); }
+.allergy-input:focus { outline: none; border-color: hsl(0, 55%, 50%); }
+
+.btn-add-allergy {
+  padding: 0.4rem 0.75rem;
+  background: hsl(0, 45%, 28%);
+  border: 1px solid hsl(0, 45%, 38%);
+  border-radius: 0.5rem;
+  color: hsl(0, 80%, 85%);
+  font-size: 0.78rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-add-allergy:hover { background: hsl(0, 50%, 35%); }
+
+.btn-add-person {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.25rem;
+  background: hsl(225, 12%, 20%);
+  border: 1px dashed hsl(258, 40%, 40%);
+  border-radius: 0.75rem;
+  color: hsl(258, 70%, 70%);
+  font-size: 0.85rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  width: 100%;
+  justify-content: center;
+  transition: all 0.2s;
+  margin-top: 0.25rem;
+}
+.btn-add-person:hover {
+  background: hsl(258, 30%, 20%);
+  border-color: hsl(258, 55%, 55%);
+  color: hsl(258, 80%, 80%);
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   MEAL CARD EXPANSION (Step 3)
+   ════════════════════════════════════════════════════════════════════════ */
+
+.meal-card {
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+}
+.meal-card:hover { box-shadow: 0 4px 20px hsl(258, 50%, 30% / 0.3); }
+
+.meal-card.expanded {
+  box-shadow: 0 4px 24px hsl(258, 60%, 25% / 0.4);
+  border-color: hsl(258, 50%, 40%);
+}
+
+.ingredient-gap-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  color: hsl(40, 90%, 65%);
+  background: hsl(40, 90%, 15%);
+  border: 1px solid hsl(40, 70%, 28%);
+  border-radius: 2rem;
+  padding: 0.15rem 0.6rem;
+  margin-top: 0.35rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.ingredient-gap-badge:hover { background: hsl(40, 80%, 20%); }
+.ingredient-gap-badge.none {
+  color: hsl(160, 70%, 50%);
+  background: hsl(160, 60%, 10%);
+  border-color: hsl(160, 55%, 22%);
+}
+
+.ingredient-panel {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid hsl(225, 12%, 24%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
+.dietary-swap-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: hsl(160, 40%, 12%);
+  border: 1px solid hsl(160, 45%, 25%);
+  border-radius: 0.625rem;
+  font-size: 0.78rem;
+  color: hsl(160, 80%, 70%);
+}
+
+.btn-apply-swap {
+  padding: 0.25rem 0.65rem;
+  background: hsl(160, 50%, 20%);
+  border: 1px solid hsl(160, 50%, 35%);
+  border-radius: 0.4rem;
+  color: hsl(160, 80%, 75%);
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.btn-apply-swap:hover { background: hsl(160, 55%, 27%); }
+
+.ingredient-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.ingredient-group-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: hsl(220, 10%, 50%);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.1rem;
+}
+
+.ingredient-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.ingredient-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 2rem;
+  font-size: 0.76rem;
+  font-weight: 500;
+}
+
+.ingredient-chip.have {
+  background: hsl(160, 55%, 12%);
+  border: 1px solid hsl(160, 55%, 24%);
+  color: hsl(160, 75%, 60%);
+}
+
+.ingredient-chip.missing {
+  background: hsl(0, 55%, 14%);
+  border: 1px solid hsl(0, 50%, 28%);
+  color: hsl(0, 70%, 72%);
+  cursor: pointer;
+  position: relative;
+}
+.ingredient-chip.missing:hover { background: hsl(0, 55%, 18%); }
+
+.ingredient-chip.required {
+  border-color: hsl(40, 80%, 40%);
+  background: hsl(40, 80%, 10%);
+  color: hsl(40, 90%, 72%);
+}
+
+.swap-btn {
+  font-size: 0.65rem;
+  background: hsl(0, 40%, 22%);
+  border: 1px solid hsl(0, 40%, 36%);
+  border-radius: 2rem;
+  color: hsl(0, 60%, 70%);
+  padding: 0.1rem 0.4rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.swap-btn:hover { background: hsl(0, 45%, 28%); }
+
+.swap-popover {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 100;
+  background: hsl(225, 14%, 18%);
+  border: 1px solid hsl(258, 35%, 38%);
+  border-radius: 0.75rem;
+  box-shadow: 0 8px 24px hsl(225, 20%, 5% / 0.7);
+  min-width: 180px;
+  padding: 0.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  animation: fadeIn 0.15s ease;
+}
+
+.swap-option-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.5rem;
+  transition: background 0.1s;
+}
+.swap-option-row:hover { background: hsl(225, 12%, 24%); }
+
+.swap-option-name {
+  font-size: 0.78rem;
+  color: hsl(220, 15%, 82%);
+  flex: 1;
+}
+
+.swap-option-tag {
+  font-size: 0.65rem;
+  color: hsl(160, 65%, 55%);
+  background: hsl(160, 50%, 10%);
+  border: 1px solid hsl(160, 45%, 22%);
+  border-radius: 2rem;
+  padding: 0.1rem 0.45rem;
+}
+
+.btn-add-to-list {
+  font-size: 0.68rem;
+  padding: 0.2rem 0.5rem;
+  background: hsl(258, 55%, 30%);
+  border: 1px solid hsl(258, 55%, 45%);
+  border-radius: 0.4rem;
+  color: hsl(258, 85%, 88%);
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.btn-add-to-list:hover { background: hsl(258, 60%, 40%); }
+.btn-add-to-list.added {
+  background: hsl(160, 50%, 18%);
+  border-color: hsl(160, 50%, 32%);
+  color: hsl(160, 70%, 65%);
+  cursor: default;
+}
+
+.swap-memory-chip {
+  font-size: 0.72rem;
+  color: hsl(258, 60%, 70%);
+  background: hsl(258, 40%, 14%);
+  border: 1px solid hsl(258, 40%, 28%);
+  border-radius: 2rem;
+  padding: 0.2rem 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  width: fit-content;
+}
+
+/* Kitchen Staples collapsible section */
+.kitchen-staples-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  color: hsl(220, 10%, 50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 0.2rem 0;
+  transition: color 0.15s;
+  text-align: left;
+}
+.kitchen-staples-toggle:hover { color: hsl(220, 10%, 70%); }
+.kitchen-staples-toggle .toggle-arrow {
+  transition: transform 0.2s;
+  display: inline-block;
+}
+.kitchen-staples-toggle.open .toggle-arrow { transform: rotate(90deg); }
+
+.kitchen-staples-body {
+  display: none;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  padding-top: 0.4rem;
+}
+.kitchen-staples-body.open { display: flex; }
+
+.kitchen-staple-chip {
+  padding: 0.2rem 0.55rem;
+  background: hsl(225, 12%, 20%);
+  border: 1px solid hsl(225, 12%, 28%);
+  border-radius: 2rem;
+  font-size: 0.72rem;
+  color: hsl(220, 10%, 55%);
+}
+
+/* Add all missing button */
+.meal-add-all-btn {
+  width: 100%;
+  padding: 0.6rem;
+  background: linear-gradient(135deg, hsl(258, 60%, 38%), hsl(270, 65%, 48%));
+  border: none;
+  border-radius: 0.625rem;
+  color: white;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+.meal-add-all-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+.meal-add-all-btn:disabled {
+  background: hsl(225, 12%, 24%);
+  color: hsl(220, 10%, 45%);
+  cursor: default;
+  transform: none;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   SHOPPING LIST PANEL
+   ════════════════════════════════════════════════════════════════════════ */
+
+.shopping-panel-overlay {
+  position: fixed;
+  inset: 0;
+  background: hsl(225, 20%, 5% / 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+.shopping-panel-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.shopping-panel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-width: 680px;
+  margin: 0 auto;
+  background: hsl(225, 14%, 14%);
+  border-top: 1px solid hsl(258, 30%, 30%);
+  border-radius: 1.25rem 1.25rem 0 0;
+  z-index: 201;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+  box-shadow: 0 -8px 40px hsl(225, 25%, 4% / 0.7);
+}
+.shopping-panel.open { transform: translateY(0); }
+
+.panel-drag-handle {
+  width: 40px;
+  height: 4px;
+  background: hsl(225, 12%, 30%);
+  border-radius: 2px;
+  margin: 0.75rem auto 0;
+  flex-shrink: 0;
+}
+
+.panel-header {
+  padding: 0.75rem 1.25rem 0.5rem;
+  flex-shrink: 0;
+}
+
+.panel-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.2rem;
+}
+
+.panel-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: hsl(220, 15%, 92%);
+}
+
+.panel-count-badge {
+  background: hsl(258, 55%, 30%);
+  color: hsl(258, 85%, 90%);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.65rem;
+  border-radius: 2rem;
+}
+
+.panel-subtitle {
+  font-size: 0.78rem;
+  color: hsl(220, 10%, 50%);
+  margin: 0;
+}
+
+.panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 1.25rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.panel-clear-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid hsl(225, 12%, 22%);
+  margin-bottom: 0.25rem;
+}
+
+.panel-progress-text {
+  font-size: 0.75rem;
+  color: hsl(220, 10%, 50%);
+}
+
+.btn-clear-list {
+  font-size: 0.72rem;
+  color: hsl(0, 55%, 60%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: color 0.15s;
+}
+.btn-clear-list:hover { color: hsl(0, 65%, 70%); }
+
+.panel-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem 1rem;
+  gap: 0.5rem;
+  text-align: center;
+}
+.panel-empty-icon { font-size: 2.5rem; }
+.panel-empty-text {
+  font-size: 1rem;
+  font-weight: 600;
+  color: hsl(220, 15%, 75%);
+  margin: 0;
+}
+.panel-empty-hint {
+  font-size: 0.8rem;
+  color: hsl(220, 10%, 48%);
+  margin: 0;
+}
+
+.shopping-section { margin-bottom: 0.25rem; }
+
+.shopping-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: hsl(220, 10%, 55%);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  padding: 0.5rem 0 0.3rem;
+}
+
+.section-count {
+  background: hsl(225, 12%, 24%);
+  color: hsl(220, 10%, 55%);
+  font-size: 0.68rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 2rem;
+}
+
+.shopping-item-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.45rem 0.5rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.shopping-item-row:hover { background: hsl(225, 12%, 20%); }
+.shopping-item-row.checked .item-name {
+  text-decoration: line-through;
+  color: hsl(220, 10%, 40%);
+}
+
+.shopping-item-check {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: hsl(160, 70%, 45%);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.item-name {
+  font-size: 0.85rem;
+  color: hsl(220, 15%, 85%);
+  flex: 1;
+  transition: color 0.2s;
+}
+
+.item-recipe-tag {
+  font-size: 0.68rem;
+  color: hsl(220, 10%, 42%);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+
+.panel-actions {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.75rem 1.25rem 1rem;
+  border-top: 1px solid hsl(225, 12%, 20%);
+  flex-shrink: 0;
+}
+
+.btn-panel { flex: 1; justify-content: center; gap: 0.5rem; }
+
+.btn-instacart {
+  background: linear-gradient(135deg, hsl(258, 65%, 42%), hsl(270, 70%, 52%));
+  border: none;
+  border-radius: 0.75rem;
+  color: white;
+  font-size: 0.88rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: not-allowed;
+  padding: 0.65rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  flex: 1;
+  opacity: 0.7;
+  position: relative;
+}
+
+.coming-soon-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: hsl(40, 90%, 50%);
+  color: hsl(40, 90%, 10%);
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: 2rem;
+  white-space: nowrap;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   FLOATING ACTION BUTTON
+   ════════════════════════════════════════════════════════════════════════ */
+
+.shopping-fab {
+  position: fixed;
+  bottom: 5.5rem;
+  right: 1.25rem;
+  z-index: 150;
+  background: linear-gradient(135deg, hsl(258, 65%, 40%), hsl(270, 70%, 50%));
+  border: none;
+  border-radius: 2rem;
+  color: white;
+  font-size: 0.88rem;
+  font-weight: 700;
+  font-family: inherit;
+  padding: 0.6rem 1.1rem;
+  cursor: pointer;
+  box-shadow: 0 4px 20px hsl(258, 60%, 30% / 0.5);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: transform 0.2s, box-shadow 0.2s, opacity 0.3s;
+  animation: fabPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.shopping-fab:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 6px 28px hsl(258, 60%, 30% / 0.7);
+}
+.shopping-fab.hidden { display: none; }
+
+.fab-count {
+  background: white;
+  color: hsl(258, 60%, 40%);
+  border-radius: 2rem;
+  min-width: 1.3rem;
+  height: 1.3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0 0.3rem;
+}
+
+@keyframes fabPop {
+  from { transform: scale(0.7); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   PRINT STYLES
+   ════════════════════════════════════════════════════════════════════════ */
+
+@media print {
+  /* Hide interactive/nav components by default */
+  .app-header,
+  .stepper,
+  .app-nav,
+  .plan-action-bar,
+  .plan-actions,
+  .plan-legend,
+  .shopping-fab,
+  .shopping-panel-overlay,
+  .shopping-panel {
+    display: none !important;
+  }
+
+  /* Show the main container by default (holds meal plan) */
+  .app-main {
+    display: block !important;
+  }
+
+  /* Hide print list by default when printing meal plan */
+  #print-shopping-list {
+    display: none !important;
+  }
+
+  /* When printing the shopping list, toggle visibility */
+  body.print-mode-shopping-list .app-main {
+    display: none !important;
+  }
+
+  body.print-mode-shopping-list #print-shopping-list {
+    display: block !important;
+    font-family: Georgia, serif;
+    color: #000;
+    padding: 1rem;
+  }
+  body.print-mode-shopping-list #print-shopping-list h2 { font-size: 1.4rem; margin-bottom: 1rem; }
+  body.print-mode-shopping-list #print-shopping-list h3 { font-size: 1rem; margin: 1rem 0 0.4rem; border-bottom: 1px solid #ccc; padding-bottom: 0.25rem; }
+  body.print-mode-shopping-list #print-shopping-list ul { list-style: none; padding: 0; margin: 0; }
+  body.print-mode-shopping-list #print-shopping-list li { padding: 0.25rem 0; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem; }
+  body.print-mode-shopping-list #print-shopping-list li::before { content: '☐'; font-size: 1rem; }
+}

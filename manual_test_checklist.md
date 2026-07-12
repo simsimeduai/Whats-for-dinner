@@ -11,6 +11,8 @@
 - [ ] Test navigation back and forth – state persists across steps.
 - [ ] Test on a mobile device (or emulator) – touch targets are at least 48 dp.
 - [ ] Verify that the app works offline after a page reload (no network required for core features).
+- [ ] Verify printing the Meal Plan (via the "Print" button on Step 3) renders only the 7-day meal plan list layout, hiding navigation buttons, header, stepper, legend, and action buttons.
+- [ ] Verify printing the Shopping List (via the "Print List" button inside the Shopping List sliding panel) renders only the clean shopping list categorized by store sections, hiding the rest of the application layout.
 - [ ] Verify that the GitHub Pages URL loads the app correctly.
 
 *Mark each item as you verify it.*
