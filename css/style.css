@@ -8,24 +8,24 @@
    -------------------------------------------------------------------------- */
 :root {
   /* Backgrounds */
-  --bg-primary: hsl(230, 25%, 8%);
-  --bg-secondary: hsl(230, 22%, 12%);
-  --bg-card: hsla(230, 20%, 14%, 0.65);
-  --bg-card-hover: hsla(230, 20%, 18%, 0.75);
+  --bg-primary: #F3F4F6;
+  --bg-secondary: hsla(0, 0%, 100%, 0.2);
+  --bg-card: hsla(0, 0%, 100%, 0.1);
+  --bg-card-hover: hsla(0, 0%, 100%, 0.25);
 
   /* Accents */
-  --accent-gradient: linear-gradient(135deg, hsl(340, 85%, 55%), hsl(30, 95%, 55%));
-  --accent-primary: hsl(209,62%,50%);
-  --accent-secondary: hsl(30, 95%, 55%);
-  --accent-success: hsl(160, 70%, 45%);
+  --accent-gradient: linear-gradient(135deg, #87CEEB, #66C2FF);
+  --accent-primary: #87CEEB;
+  --accent-secondary: #66C2FF;
+  --accent-success: hsl(152, 69%, 31%);
 
   /* Text */
-  --text-primary: hsl(0, 0%, 95%);
-  --text-secondary: hsl(230, 15%, 70%);
-  --text-muted: hsl(230, 15%, 45%);
+  --text-primary: #000000;
+  --text-secondary: #333333;
+  --text-muted: #555555;
 
   /* Borders */
-  --border-subtle: hsla(230, 20%, 30%, 0.4);
+  --border-subtle: hsla(0, 0%, 0%, 0.1);
 
   /* Radii */
   --radius-sm: 8px;
@@ -34,7 +34,7 @@
   --radius-full: 9999px;
 
   /* Shadows */
-  --shadow-glow: 0 0 30px hsla(340, 85%, 55%, 0.15);
+  --shadow-glow: 0 0 30px hsla(200, 70%, 75%, 0.15);
 
   /* Typography */
   --font: 'Outfit', sans-serif;
@@ -46,7 +46,7 @@
 
   /* Meal-type accent colours */
   --meal-breakfast: hsl(40, 90%, 55%);
-  --meal-lunch: hsl(160, 70%, 45%);
+  --meal-lunch: hsl(152, 69%, 45%);
   --meal-dinner: hsl(270, 65%, 55%);
 }
 
@@ -70,40 +70,13 @@ html {
 
 body {
   font-family: var(--font);
-  background: var(--bg-primary);
+  background: linear-gradient(hsla(210, 20%, 96%, 0.88), hsla(210, 20%, 96%, 0.88)), url('../Pictures/jimmy-dean-Yl7Y8DhyzyY-unsplash.jpg') no-repeat center center fixed;
+  background-size: cover;
   color: var(--text-primary);
   line-height: 1.6;
   min-height: 100vh;
   overflow-x: hidden;
   position: relative;
-}
-
-/* Subtle ambient gradient blobs behind content */
-body::before,
-body::after {
-  content: '';
-  position: fixed;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 0;
-  filter: blur(120px);
-  opacity: 0.35;
-}
-
-body::before {
-  width: 600px;
-  height: 600px;
-  background: hsla(340, 85%, 55%, 0.12);
-  top: -10%;
-  left: -8%;
-}
-
-body::after {
-  width: 500px;
-  height: 500px;
-  background: hsla(30, 95%, 55%, 0.10);
-  bottom: -10%;
-  right: -8%;
 }
 
 a {
@@ -151,22 +124,22 @@ input, textarea, select {
 }
 
 ::-webkit-scrollbar-track {
-  background: hsla(230, 20%, 14%, 0.4);
+  background: hsla(0, 0%, 100%, 0.4);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsla(340, 85%, 55%, 0.35);
+  background: hsla(200, 70%, 75%, 0.35);
   border-radius: var(--radius-full);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsla(340, 85%, 55%, 0.55);
+  background: hsla(200, 70%, 75%, 0.55);
 }
 
 /* Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: hsla(340, 85%, 55%, 0.35) hsla(230, 20%, 14%, 0.4);
+  scrollbar-color: hsla(200, 70%, 75%, 0.35) hsla(0, 0%, 100%, 0.4);
 }
 
 /* --------------------------------------------------------------------------
@@ -176,7 +149,7 @@ input, textarea, select {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: hsla(230, 25%, 8%, 0.75);
+  background: hsla(0, 0%, 100%, 0.4);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border-subtle);
@@ -417,13 +390,13 @@ input, textarea, select {
 .input-method-card:hover {
   transform: translateY(-4px);
   background: var(--bg-card-hover);
-  border-color: hsla(340, 85%, 55%, 0.25);
-  box-shadow: 0 8px 32px hsla(340, 85%, 55%, 0.08);
+  border-color: hsla(200, 70%, 75%, 0.25);
+  box-shadow: 0 8px 32px hsla(200, 70%, 75%, 0.08);
 }
 
 .input-method-card.active {
   border-color: var(--accent-primary);
-  box-shadow: 0 0 24px hsla(340, 85%, 55%, 0.2), inset 0 0 0 1px var(--accent-primary);
+  box-shadow: 0 0 24px hsla(200, 70%, 75%, 0.2), inset 0 0 0 1px var(--accent-primary);
 }
 
 .input-method-card.active::before {
@@ -497,7 +470,7 @@ input, textarea, select {
 
 .search-input:focus {
   border-color: var(--accent-primary);
-  box-shadow: 0 0 0 3px hsla(340, 85%, 55%, 0.12);
+  box-shadow: 0 0 0 3px hsla(200, 70%, 75%, 0.12);
 }
 
 .btn-add {
@@ -537,7 +510,7 @@ input, textarea, select {
 }
 
 .autocomplete-option:hover {
-  background: hsla(340, 85%, 55%, 0.1);
+  background: hsla(200, 70%, 75%, 0.1);
 }
 
 .autocomplete-option + .autocomplete-option {
@@ -580,7 +553,7 @@ input, textarea, select {
 }
 
 .suggestion-chip:hover:not(.added) {
-  background: hsla(340, 85%, 55%, 0.1);
+  background: hsla(200, 70%, 75%, 0.1);
   border-color: var(--accent-primary);
   color: var(--text-primary);
 }
@@ -686,7 +659,7 @@ input, textarea, select {
 .dropzone:hover,
 .dropzone.dragover {
   border-color: var(--accent-primary);
-  background: hsla(340, 85%, 55%, 0.04);
+  background: hsla(200, 70%, 75%, 0.04);
 }
 
 .dropzone-icon {
@@ -784,7 +757,7 @@ input, textarea, select {
 }
 
 .ocr-item:hover {
-  background: hsla(230, 20%, 18%, 0.4);
+  background: hsla(0, 0%, 100%, 0.4);
 }
 
 .ocr-item:last-child {
@@ -868,7 +841,7 @@ input, textarea, select {
 
 .cuisine-card.selected {
   border-color: var(--accent-primary);
-  box-shadow: 0 0 20px hsla(340, 85%, 55%, 0.18);
+  box-shadow: 0 0 20px hsla(200, 70%, 75%, 0.18);
 }
 
 /* Checkmark badge overlay on selected */
@@ -958,7 +931,7 @@ input, textarea, select {
 .cuisine-toggle-all:hover {
   border-color: var(--accent-primary);
   color: var(--text-primary);
-  background: hsla(340, 85%, 55%, 0.06);
+  background: hsla(200, 70%, 75%, 0.06);
 }
 
 .cuisine-warning {
@@ -1104,7 +1077,7 @@ input, textarea, select {
   font-size: 0.7rem;
   font-weight: 500;
   color: var(--text-muted);
-  background: hsla(230, 20%, 20%, 0.6);
+  background: hsla(0, 0%, 100%, 0.5);
   padding: 0.15rem 0.5rem;
   border-radius: var(--radius-full);
 }
@@ -1132,7 +1105,7 @@ input, textarea, select {
 .meal-match-bar {
   width: 100%;
   height: 4px;
-  background: hsla(230, 20%, 20%, 0.6);
+  background: hsla(0, 0%, 100%, 0.5);
   border-radius: var(--radius-full);
   overflow: hidden;
   margin-bottom: 0.3rem;
@@ -1234,12 +1207,12 @@ input, textarea, select {
   background: var(--accent-gradient);
   color: #fff;
   border: none;
-  box-shadow: 0 4px 16px hsla(340, 85%, 55%, 0.2);
+  box-shadow: 0 4px 16px hsla(200, 70%, 75%, 0.2);
 }
 
 .btn-primary:hover {
   filter: brightness(1.12);
-  box-shadow: 0 6px 24px hsla(340, 85%, 55%, 0.3);
+  box-shadow: 0 6px 24px hsla(200, 70%, 75%, 0.3);
 }
 
 /* Secondary — outlined */
@@ -1250,7 +1223,7 @@ input, textarea, select {
 }
 
 .btn-secondary:hover {
-  background: hsla(340, 85%, 55%, 0.1);
+  background: hsla(200, 70%, 75%, 0.1);
   border-color: var(--accent-secondary);
   color: var(--accent-secondary);
 }
@@ -1274,7 +1247,7 @@ input, textarea, select {
   left: 0;
   right: 0;
   z-index: 100;
-  background: hsla(230, 25%, 8%, 0.85);
+  background: hsla(0, 0%, 100%, 0.5);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid var(--border-subtle);
@@ -1400,10 +1373,10 @@ input, textarea, select {
 
 @keyframes glowPulse {
   0%, 100% {
-    box-shadow: 0 0 20px hsla(340, 85%, 55%, 0.15);
+    box-shadow: 0 0 20px hsla(200, 70%, 75%, 0.15);
   }
   50% {
-    box-shadow: 0 0 36px hsla(340, 85%, 55%, 0.3);
+    box-shadow: 0 0 36px hsla(200, 70%, 75%, 0.3);
   }
 }
 
