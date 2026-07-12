@@ -978,6 +978,17 @@ input, textarea, select {
   color: var(--accent-primary);
 }
 
+.plan-actions-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.btn-calendar {
+  width: 100%;
+}
+
 .plan-actions {
   display: flex;
   gap: 0.5rem;
@@ -1568,6 +1579,10 @@ input, textarea, select {
 
   .plan-action-bar {
     flex-direction: column;
+    align-items: stretch;
+  }
+
+  .plan-actions-group {
     align-items: stretch;
   }
 
