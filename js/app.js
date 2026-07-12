@@ -217,10 +217,14 @@ const App = {
      UI Updates
      ══════════════════════════════════════════════════════════════════════ */
 
-  /** Update the progress stepper to reflect the current step. */
   _updateStepper() {
     const steps = document.querySelectorAll('.stepper-step');
     const lineFill = document.getElementById('stepper-line-fill');
+    const stepperEl = document.getElementById('stepper');
+
+    if (stepperEl) {
+      stepperEl.classList.toggle('hidden', this.currentStep === 3);
+    }
 
     steps.forEach(stepEl => {
       const stepNum = parseInt(stepEl.dataset.step);

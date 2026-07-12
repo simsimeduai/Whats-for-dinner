@@ -281,26 +281,31 @@ const MealPlanner = {
           ${selectedCuisines.length} cuisine${selectedCuisines.length !== 1 ? 's' : ''}
         </span>
       </div>
-      <div class="plan-actions">
-        <button class="btn btn-secondary btn-sm" id="btn-open-shopping-list" aria-label="Open shopping list">
-          🛒 Shopping List
+      <div class="plan-actions-group">
+        <button class="btn btn-primary btn-sm btn-calendar" id="btn-add-to-calendar" aria-label="Add to calendar">
+          📅 Add to Calendar
         </button>
-        <button class="btn btn-secondary btn-sm" id="btn-regenerate" aria-label="Regenerate meal plan">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="regenerate-icon">
-            <polyline points="23 4 23 10 17 10"></polyline>
-            <polyline points="1 20 1 14 7 14"></polyline>
-            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-          </svg>
-          Regenerate
-        </button>
-        <button class="btn btn-secondary btn-sm" id="btn-print" aria-label="Print meal plan">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="6 9 6 2 18 2 18 9"></polyline>
-            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
-            <rect x="6" y="14" width="12" height="8"></rect>
-          </svg>
-          Print
-        </button>
+        <div class="plan-actions">
+          <button class="btn btn-secondary btn-sm" id="btn-open-shopping-list" aria-label="Open shopping list">
+            🛒 Shopping List
+          </button>
+          <button class="btn btn-secondary btn-sm" id="btn-regenerate" aria-label="Regenerate meal plan">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="regenerate-icon">
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <polyline points="1 20 1 14 7 14"></polyline>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+            Regenerate
+          </button>
+          <button class="btn btn-secondary btn-sm" id="btn-print" aria-label="Print meal plan">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 6 2 18 2 18 9"></polyline>
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+              <rect x="6" y="14" width="12" height="8"></rect>
+            </svg>
+            Print
+          </button>
+        </div>
       </div>
     `;
     container.appendChild(actionBar);
@@ -329,6 +334,10 @@ const MealPlanner = {
     container.appendChild(legend);
 
     // ── Event Listeners ──
+    document.getElementById('btn-add-to-calendar')?.addEventListener('click', () => {
+      this._downloadCalendarICS();
+    });
+
     document.getElementById('btn-open-shopping-list')?.addEventListener('click', () => {
       if (typeof ShoppingList !== 'undefined') ShoppingList.open();
     });
@@ -767,5 +776,89 @@ const MealPlanner = {
       }
     }
     return null;
+  },
+
+  /**
+   * Generate and download an iCalendar (.ics) file for the generated meal plan.
+   * @private
+   */
+  _downloadCalendarICS() {
+    if (!this.currentPlan) return;
+
+    const formatICSDate = (date) => {
+      return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+    };
+
+    const today = new Date();
+    const currentDayOfWeek = today.getDay();
+    const daysToMonday = (1 - currentDayOfWeek + 7) % 7;
+    const mondayDate = new Date(today);
+    mondayDate.setDate(today.getDate() + (daysToMonday === 0 ? 7 : daysToMonday));
+    mondayDate.setHours(0, 0, 0, 0);
+
+    let icsContent = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Whats for Dinner//Meal Planner//EN',
+      'CALSCALE:GREGORIAN',
+      'METHOD:PUBLISH'
+    ];
+
+    const mealTimes = {
+      breakfast: { start: 8, end: 9 },
+      lunch: { start: 13, end: 14 },
+      dinner: { start: 19, end: 20 }
+    };
+
+    this.DAYS.forEach((dayName, dayIndex) => {
+      const dayKey = dayName.toLowerCase();
+      const dayDate = new Date(mondayDate);
+      dayDate.setDate(mondayDate.getDate() + dayIndex);
+
+      this.MEAL_TYPES.forEach(mealMeta => {
+        const recipe = this.currentPlan[dayKey]?.[mealMeta.id];
+        if (!recipe) return;
+
+        const time = mealTimes[mealMeta.id];
+        const startDate = new Date(dayDate);
+        startDate.setHours(time.start, 0, 0, 0);
+        
+        const endDate = new Date(dayDate);
+        endDate.setHours(time.end, 0, 0, 0);
+
+        const summary = `${mealMeta.icon} ${mealMeta.label}: ${recipe.name}`;
+        
+        const matched = (recipe.matchedIngredients || []).join(', ');
+        const missing = (recipe.missingIngredients || []).join(', ');
+        const description = `Cuisine: ${recipe.cuisine}\\nPrep Time: ${recipe.prepTime} mins\\n\\nIngredients matched: ${matched || 'None'}\\nIngredients missing: ${missing || 'None'}\\n\\n${recipe.description || ''}`
+          .replace(/,/g, '\\,')
+          .replace(/;/g, '\\;')
+          .replace(/\n/g, '\\n');
+
+        const uid = `wfd-${recipe.id}-${formatICSDate(startDate)}`;
+
+        icsContent.push(
+          'BEGIN:VEVENT',
+          `UID:${uid}`,
+          `DTSTAMP:${formatICSDate(new Date())}`,
+          `DTSTART:${formatICSDate(startDate)}`,
+          `DTEND:${formatICSDate(endDate)}`,
+          `SUMMARY:${summary}`,
+          `DESCRIPTION:${description}`,
+          'END:VEVENT'
+        );
+      });
+    });
+
+    icsContent.push('END:VCALENDAR');
+    const icsString = icsContent.join('\r\n');
+
+    const blob = new Blob([icsString], { type: 'text/calendar;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute('download', 'whats-for-dinner-meal-plan.ics');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   }
 };
