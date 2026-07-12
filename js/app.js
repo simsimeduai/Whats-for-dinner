@@ -6,8 +6,15 @@
  */
 const App = {
   /* ══════════════════════════════════════════════════════════════════════
-     State
+     State & Configuration
      ══════════════════════════════════════════════════════════════════════ */
+
+  config: {
+    features: {
+      enablePremium: false,
+      showPremiumUpsells: true
+    }
+  },
 
   /** @type {number} Current step (1, 2, or 3) */
   currentStep: 1,
@@ -28,6 +35,7 @@ const App = {
   /** Boot the application. Called on DOMContentLoaded. */
   init() {
     this._bindNavigation();
+    this._setupPremiumFeatures();
     this._renderStep(1);
     this._updateStepper();
     this._updateNavButtons();
@@ -293,6 +301,88 @@ const App = {
       toast.classList.remove('toast-visible');
       setTimeout(() => toast.remove(), 300);
     }, 3000);
+  /* ══════════════════════════════════════════════════════════════════════
+     Monetization Mechanisms (Premium Features)
+     ══════════════════════════════════════════════════════════════════════ */
+
+  /** Setup premium UI toggles based on feature flags */
+  _setupPremiumFeatures() {
+    const proBtn = document.getElementById('btn-go-pro');
+    if (proBtn) {
+      if (this.config.features.showPremiumUpsells) {
+        proBtn.classList.remove('hidden');
+        proBtn.addEventListener('click', () => {
+          this.requirePremium('Premium features', () => {
+             this._showToast('Welcome to Pro!', 'success');
+          });
+        });
+      } else {
+        proBtn.classList.add('hidden');
+      }
+    }
+  },
+
+  /** 
+   * Gating function to check for premium access. 
+   * If not premium, it shows a "Coming Soon" modal.
+   * @param {string} featureName
+   * @param {Function} callback
+   */
+  requirePremium(featureName, callback) {
+    if (this.config.features.enablePremium) {
+      if (typeof callback === 'function') callback();
+    } else {
+      this.showModal(
+        '🚀 Upgrade to Pro',
+        `<p>${featureName} are part of our upcoming Premium tier.</p>
+         <p>Upgrade to Pro to unlock unlimited OCR scanning, advanced filters, and more!</p>`,
+        'Got it!'
+      );
+    }
+  },
+
+  /**
+   * Display a generic modal dialog.
+   * @param {string} title
+   * @param {string} contentHTML
+   * @param {string} closeBtnText
+   */
+  showModal(title, contentHTML, closeBtnText = 'Close') {
+    const container = document.getElementById('modal-container');
+    if (!container) return;
+
+    container.innerHTML = `
+      <div class="modal-backdrop fade-in">
+        <div class="modal-card slide-up">
+          <div class="modal-header">
+            <h3>${title}</h3>
+            <button class="modal-close" aria-label="Close modal">&times;</button>
+          </div>
+          <div class="modal-body">
+            ${contentHTML}
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-primary btn-modal-close">${closeBtnText}</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const closeBtn = container.querySelector('.modal-close');
+    const actionCloseBtn = container.querySelector('.btn-modal-close');
+    const backdrop = container.querySelector('.modal-backdrop');
+
+    const closeModal = () => {
+      backdrop.classList.replace('fade-in', 'fade-out');
+      container.querySelector('.modal-card').classList.replace('slide-up', 'slide-down');
+      setTimeout(() => { container.innerHTML = ''; }, 300);
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+    actionCloseBtn.addEventListener('click', closeModal);
+    backdrop.addEventListener('click', (e) => {
+      if (e.target === backdrop) closeModal();
+    });
   }
 };
 

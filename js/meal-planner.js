@@ -307,6 +307,22 @@ const MealPlanner = {
     document.getElementById('btn-print')?.addEventListener('click', () => {
       window.print();
     });
+
+    // Grocery list listener
+    document.querySelectorAll('.btn-add-missing').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            try {
+                const missing = JSON.parse(e.currentTarget.dataset.missing);
+                if (Array.isArray(missing) && typeof GroceryInput !== 'undefined') {
+                    missing.forEach(item => {
+                        GroceryInput._addGrocery(item);
+                    });
+                }
+            } catch (err) {
+                console.error('Failed to add missing ingredients', err);
+            }
+        });
+    });
   },
 
   /**
@@ -356,6 +372,7 @@ const MealPlanner = {
         <div class="meal-ingredients">
           ${matchedHTML}${missingHTML}
         </div>
+        ${recipe.missingIngredients && recipe.missingIngredients.length > 0 ? `<button class="btn btn-sm btn-add-missing" data-missing='${JSON.stringify(recipe.missingIngredients)}'>Add missing</button>` : ''}
       </div>
     `;
 
