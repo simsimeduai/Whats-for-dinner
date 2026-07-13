@@ -2976,3 +2976,241 @@ input, textarea, select {
 .serving-swap-popover {
   min-width: 140px;
 }
+
+/* ════════════════════════════════════════════════════════════════════════
+   UNUSED INGREDIENTS AUDIT & CUSTOM RECIPES STYLES
+   ════════════════════════════════════════════════════════════════════════ */
+
+.unused-audit-section {
+  margin-top: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  background: hsl(30, 20%, 12%);
+  border: 1px solid hsl(30, 40%, 22%);
+  border-radius: 1rem;
+  animation: fadeSlideIn 0.3s ease both;
+}
+
+.unused-audit-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.warning-icon {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.unused-audit-title-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.unused-audit-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: hsl(30, 90%, 75%);
+  margin: 0;
+}
+
+.unused-audit-subtitle {
+  font-size: 0.8rem;
+  color: hsl(30, 20%, 65%);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.unused-cards-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.unused-audit-card {
+  background: hsl(30, 20%, 15%);
+  border: 1px solid hsl(30, 25%, 25%);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.unused-card-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.unused-card-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.unused-card-name {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: hsl(30, 90%, 85%);
+}
+
+.unused-card-alert {
+  font-size: 0.82rem;
+  color: hsl(30, 10%, 60%);
+}
+
+.unused-suggestions-text {
+  font-size: 0.78rem;
+  color: hsl(30, 15%, 65%);
+  margin: 0;
+}
+
+.similar-suggestion-btn {
+  background: none;
+  border: none;
+  color: hsl(30, 90%, 70%);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  font-size: 0.78rem;
+  text-decoration: underline;
+  font-family: inherit;
+}
+.similar-suggestion-btn:hover {
+  color: hsl(30, 95%, 80%);
+}
+
+.unused-actions-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.rename-input-group {
+  display: flex;
+  gap: 0.4rem;
+  flex: 1;
+  max-width: 320px;
+}
+
+.unused-rename-input {
+  flex: 1;
+  padding: 0.35rem 0.65rem;
+  background: hsl(30, 20%, 9%);
+  border: 1px solid hsl(30, 20%, 24%);
+  border-radius: 0.5rem;
+  color: hsl(30, 10%, 85%);
+  font-size: 0.8rem;
+  font-family: inherit;
+}
+.unused-rename-input:focus {
+  outline: none;
+  border-color: hsl(30, 80%, 55%);
+}
+
+.btn-toggle-custom-recipe {
+  white-space: nowrap;
+}
+
+/* Custom Recipe Form Layout */
+.custom-recipe-form {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid hsl(30, 20%, 25%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  animation: fadeSlideIn 0.25s ease both;
+}
+
+.form-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: hsl(30, 90%, 80%);
+  margin: 0 0 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.custom-recipe-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.custom-recipe-form label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: hsl(220, 10%, 65%);
+}
+
+.custom-recipe-form input[type="text"],
+.custom-recipe-form input[type="number"],
+.custom-recipe-form select,
+.custom-recipe-form textarea {
+  padding: 0.45rem 0.65rem;
+  background: hsl(225, 12%, 11%);
+  border: 1px solid hsl(225, 12%, 24%);
+  border-radius: 0.5rem;
+  color: hsl(220, 15%, 85%);
+  font-size: 0.82rem;
+  font-family: inherit;
+  width: 100%;
+}
+
+.custom-recipe-form input:focus,
+.custom-recipe-form select:focus,
+.custom-recipe-form textarea:focus {
+  outline: none;
+  border-color: hsl(258, 60%, 55%);
+}
+
+.custom-recipe-form .form-row {
+  display: flex;
+  gap: 0.75rem;
+}
+.custom-recipe-form .form-row .form-group {
+  flex: 1;
+}
+
+.meal-type-chips {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  height: 100%;
+}
+
+.meal-type-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  color: hsl(220, 10%, 75%);
+  cursor: pointer;
+  user-select: none;
+}
+.meal-type-chip input {
+  accent-color: hsl(258, 60%, 55%);
+  cursor: pointer;
+}
+
+.btn-save-recipe {
+  background: linear-gradient(135deg, hsl(30, 95%, 45%), hsl(20, 90%, 55%));
+  border: none;
+  border-radius: 0.5rem;
+  color: white;
+  font-weight: 700;
+  font-size: 0.82rem;
+  padding: 0.55rem 1rem;
+  cursor: pointer;
+  transition: filter 0.2s;
+  align-self: flex-start;
+}
+.btn-save-recipe:hover {
+  filter: brightness(1.15);
+}

@@ -687,6 +687,9 @@ const GroceryInput = {
       this._renderGroceryList();
       this._updateSuggestionChips();
     });
+
+    // Run unused ingredients check
+    this._checkUnusedIngredients();
   },
 
   /** Update suggestion chips to grey-out already-added items. */
@@ -873,5 +876,302 @@ const GroceryInput = {
    */
   getPantryStaples() {
     return [...this.pantryStaples];
+  },
+
+  /** Get all character bigrams for Jaccard similarity. */
+  _getBigrams(str) {
+    const bigrams = new Set();
+    for (let i = 0; i < str.length - 1; i++) {
+      bigrams.add(str.slice(i, i + 2));
+    }
+    return bigrams;
+  },
+
+  /** Calculate Jaccard similarity between two strings. */
+  _getSimilarity(str1, str2) {
+    const b1 = this._getBigrams(str1.toLowerCase());
+    const b2 = this._getBigrams(str2.toLowerCase());
+    if (b1.size === 0 || b2.size === 0) return 0;
+    const intersection = new Set([...b1].filter(x => b2.has(x)));
+    return intersection.size / (b1.size + b2.size - intersection.size);
+  },
+
+  /** Load custom recipes from localStorage. */
+  _loadCustomRecipes() {
+    try {
+      const stored = localStorage.getItem('wfd_custom_recipes');
+      return stored ? JSON.parse(stored) : [];
+    } catch (e) {
+      return [];
+    }
+  },
+
+  /** Save custom recipes to localStorage. */
+  _saveCustomRecipes(recipes) {
+    try {
+      localStorage.setItem('wfd_custom_recipes', JSON.stringify(recipes));
+    } catch (e) {
+      console.warn('Could not save custom recipes:', e);
+    }
+  },
+
+  /** Find similar spelling ingredients in the database. */
+  _findSimilarIngredients(query) {
+    if (!query || query.length < 2) return [];
+    const allDBIngredients = new Set();
+    
+    const standard = typeof RECIPES !== 'undefined' ? RECIPES : [];
+    standard.forEach(r => r.ingredients?.forEach(i => allDBIngredients.add(i.toLowerCase().trim())));
+    
+    const custom = this._loadCustomRecipes();
+    custom.forEach(r => r.ingredients?.forEach(i => allDBIngredients.add(i.toLowerCase().trim())));
+
+    const matches = [];
+    allDBIngredients.forEach(ing => {
+      const score = this._getSimilarity(query, ing);
+      if (score > 0.35) {
+        matches.push({ ingredient: ing, score });
+      }
+    });
+
+    matches.sort((a, b) => b.score - a.score);
+    return matches.slice(0, 2).map(m => m.ingredient);
+  },
+
+  /** Check for grocery items that do not appear in any recipe. */
+  _checkUnusedIngredients() {
+    const known = new Set();
+    
+    const standard = typeof RECIPES !== 'undefined' ? RECIPES : [];
+    standard.forEach(r => r.ingredients?.forEach(i => known.add(i.toLowerCase().trim())));
+    
+    const custom = this._loadCustomRecipes();
+    custom.forEach(r => r.ingredients?.forEach(i => known.add(i.toLowerCase().trim())));
+
+    const unmatched = this.groceries.filter(item => {
+      const itemLower = item.toLowerCase().trim();
+      for (const k of known) {
+        if (k === itemLower || k.includes(itemLower) || itemLower.includes(k)) {
+          return false;
+        }
+      }
+      return true;
+    });
+
+    this._renderUnusedAuditSection(unmatched);
+  },
+
+  /** Render the unused ingredients audit section below the grocery list. */
+  _renderUnusedAuditSection(unmatched) {
+    const existing = document.getElementById('unused-audit-section');
+    if (existing) existing.remove();
+
+    if (!unmatched || unmatched.length === 0) return;
+
+    const section = document.createElement('div');
+    section.className = 'unused-audit-section';
+    section.id = 'unused-audit-section';
+
+    section.innerHTML = `
+      <div class="unused-audit-header">
+        <span class="warning-icon">⚠️</span>
+        <div class="unused-audit-title-row">
+          <h3 class="unused-audit-title">Unused Ingredients Check</h3>
+          <p class="unused-audit-subtitle">We don't have recipes using the items below. Rename them or add your own recipe so they don't go to waste!</p>
+        </div>
+      </div>
+      <div class="unused-cards-container" id="unused-cards-container"></div>
+    `;
+
+    const grocerySection = document.getElementById('grocery-section');
+    if (grocerySection && grocerySection.parentNode) {
+      grocerySection.parentNode.insertBefore(section, grocerySection.nextSibling);
+    } else if (this.container) {
+      this.container.appendChild(section);
+    }
+
+    const cardsContainer = document.getElementById('unused-cards-container');
+    if (!cardsContainer) return;
+
+    unmatched.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'unused-audit-card';
+      card.dataset.item = item;
+
+      const suggestions = this._findSimilarIngredients(item);
+      const suggestionsHTML = suggestions.length > 0
+        ? `<p class="unused-suggestions-text">Did you mean: ${suggestions.map(s => `<button class="similar-suggestion-btn" data-suggest="${s}">${s}</button>`).join(' or ')}?</p>`
+        : '';
+
+      card.innerHTML = `
+        <div class="unused-card-main">
+          <div class="unused-card-info">
+            <span class="unused-card-name">"${item}"</span>
+            <span class="unused-card-alert">No matching recipes found.</span>
+          </div>
+          ${suggestionsHTML}
+          
+          <div class="unused-actions-row">
+            <div class="rename-input-group">
+              <input type="text" class="unused-rename-input" placeholder="Rename (e.g. bhindi, ladies finger...)" value="${item}" />
+              <button class="btn btn-secondary btn-sm btn-rename">Rename</button>
+            </div>
+            <button class="btn btn-primary btn-sm btn-toggle-custom-recipe">+ Add Custom Recipe</button>
+          </div>
+        </div>
+        <div class="custom-recipe-form-container" style="display:none"></div>
+      `;
+
+      card.querySelectorAll('.similar-suggestion-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const target = btn.dataset.suggest;
+          this._renameGroceryItem(item, target);
+        });
+      });
+
+      card.querySelector('.btn-rename').addEventListener('click', (e) => {
+        e.stopPropagation();
+        const input = card.querySelector('.unused-rename-input');
+        const target = input?.value.trim();
+        if (target && target.toLowerCase() !== item.toLowerCase()) {
+          this._renameGroceryItem(item, target);
+        }
+      });
+
+      const toggleBtn = card.querySelector('.btn-toggle-custom-recipe');
+      const formContainer = card.querySelector('.custom-recipe-form-container');
+      toggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isShown = formContainer.style.display === 'block';
+        formContainer.style.display = isShown ? 'none' : 'block';
+        toggleBtn.textContent = isShown ? '+ Add Custom Recipe' : 'Hide Custom Recipe Form';
+        if (!isShown) {
+          this._renderCustomRecipeForm(item, formContainer);
+        }
+      });
+
+      cardsContainer.appendChild(card);
+    });
+  },
+
+  /** Helper to rename a grocery item. */
+  _renameGroceryItem(oldName, newName) {
+    const idx = this.groceries.indexOf(oldName);
+    if (idx >= 0) {
+      if (this.groceries.includes(newName)) {
+        this.groceries.splice(idx, 1);
+      } else {
+        this.groceries[idx] = newName;
+      }
+      this._renderGroceryList();
+      this._updateSuggestionChips();
+      if (typeof App !== 'undefined') App._showToast(`Renamed "${oldName}" to "${newName}"`, 'success');
+    }
+  },
+
+  /** Render the custom recipe form. */
+  _renderCustomRecipeForm(ingredientName, formContainer) {
+    const CUISINES = [
+      { id: 'indian', label: 'Indian' },
+      { id: 'italian', label: 'Italian' },
+      { id: 'mexican', label: 'Mexican' },
+      { id: 'chinese', label: 'Chinese' },
+      { id: 'japanese', label: 'Japanese' },
+      { id: 'thai', label: 'Thai' },
+      { id: 'mediterranean', label: 'Mediterranean' },
+      { id: 'american', label: 'American' },
+      { id: 'korean', label: 'Korean' },
+      { id: 'middle-eastern', label: 'Middle Eastern' },
+      { id: 'french', label: 'French' },
+      { id: 'southern-soul', label: 'Southern/Soul' }
+    ];
+
+    formContainer.innerHTML = `
+      <div class="custom-recipe-form">
+        <h4 class="form-title">Add a Custom Recipe using "${ingredientName}"</h4>
+        <div class="form-group">
+          <label>Recipe Name *</label>
+          <input type="text" class="recipe-name-input" placeholder="e.g. Garlic Fried Okra" required />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Meal Type *</label>
+            <div class="meal-type-chips">
+              <label class="meal-type-chip"><input type="checkbox" value="breakfast" /> Breakfast</label>
+              <label class="meal-type-chip"><input type="checkbox" value="lunch" checked /> Lunch</label>
+              <label class="meal-type-chip"><input type="checkbox" value="dinner" checked /> Dinner</label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Cuisine *</label>
+            <select class="recipe-cuisine-select">
+              ${CUISINES.map(c => `<option value="${c.label}">${c.label}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Prep Time (minutes) *</label>
+            <input type="number" class="recipe-time-input" value="25" min="5" required />
+          </div>
+          <div class="form-group">
+            <label>Other Ingredients (comma separated)</label>
+            <input type="text" class="recipe-ings-input" placeholder="e.g. oil, onion, salt, spices" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Short Description / Instructions</label>
+          <textarea class="recipe-desc-input" rows="2" placeholder="e.g. Stir-fry okra with sliced onions and spices until crispy."></textarea>
+        </div>
+        <button class="btn btn-primary btn-save-recipe">Save Recipe</button>
+      </div>
+    `;
+
+    formContainer.querySelector('.btn-save-recipe').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const nameInput = formContainer.querySelector('.recipe-name-input');
+      const name = nameInput?.value.trim();
+      if (!name) {
+        if (nameInput) nameInput.focus();
+        return;
+      }
+
+      const mealTypes = Array.from(formContainer.querySelectorAll('.meal-type-chips input:checked')).map(el => el.value);
+      if (mealTypes.length === 0) {
+        alert('Please select at least one meal type.');
+        return;
+      }
+
+      const cuisine = formContainer.querySelector('.recipe-cuisine-select').value;
+      const prepTime = parseInt(formContainer.querySelector('.recipe-time-input').value) || 20;
+      const otherIngsText = formContainer.querySelector('.recipe-ings-input').value;
+      const description = formContainer.querySelector('.recipe-desc-input').value.trim();
+
+      const otherIngs = otherIngsText.split(',')
+        .map(i => i.trim())
+        .filter(Boolean);
+      
+      const ingredients = [ingredientName, ...otherIngs];
+
+      const newRecipe = {
+        id: `custom-${Date.now()}`,
+        name,
+        cuisine,
+        mealType: mealTypes,
+        ingredients,
+        prepTime,
+        difficulty: 'easy',
+        description: description || `A custom recipe utilizing ${ingredientName}.`
+      };
+
+      const customList = this._loadCustomRecipes();
+      customList.push(newRecipe);
+      this._saveCustomRecipes(customList);
+
+      if (typeof App !== 'undefined') App._showToast(`Saved custom recipe "${name}"!`, 'success');
+
+      this._checkUnusedIngredients();
+    });
   },
 };

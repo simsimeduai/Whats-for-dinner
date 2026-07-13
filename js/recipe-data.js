@@ -1359,6 +1359,146 @@ const RECIPES = [
     prepTime: 25,
     difficulty: "medium",
     description: "Crispy cornmeal-crusted catfish fillets fried golden and served with lemon wedges."
+  },
+  {
+    id: "indian-bhindi-masala",
+    name: "Bhindi Masala (Spiced Okra)",
+    cuisine: "Indian",
+    mealType: ["lunch", "dinner"],
+    ingredients: ["okra", "onion", "tomato", "ginger", "garlic", "turmeric", "cumin", "garam masala", "chili powder", "oil", "salt"],
+    prepTime: 25,
+    difficulty: "easy",
+    description: "A popular North Indian dish of stir-fried okra with onions, tomatoes, and aromatic spices."
+  },
+  {
+    id: "indian-bhindi-do-pyaza",
+    name: "Bhindi Do Pyaza",
+    cuisine: "Indian",
+    mealType: ["dinner"],
+    ingredients: ["okra", "onion", "tomato", "green chili", "yogurt", "turmeric", "cumin", "oil", "salt"],
+    prepTime: 30,
+    difficulty: "medium",
+    description: "Okra cooked with double the onions, yogurt, and warm Indian spices."
+  },
+  {
+    id: "southern-fried-okra",
+    name: "Southern Fried Okra",
+    cuisine: "Southern/Soul",
+    mealType: ["lunch"],
+    ingredients: ["okra", "cornmeal", "flour", "egg", "buttermilk", "cayenne", "black pepper", "oil", "salt"],
+    prepTime: 20,
+    difficulty: "easy",
+    description: "Crispy, golden-brown sliced okra coated in seasoned cornmeal and fried to perfection."
+  },
+  {
+    id: "southern-seafood-gumbo",
+    name: "Seafood and Okra Gumbo",
+    cuisine: "Southern/Soul",
+    mealType: ["dinner"],
+    ingredients: ["okra", "shrimp", "crab", "onion", "celery", "bell pepper", "garlic", "flour", "chicken broth", "thyme", "oil", "salt"],
+    prepTime: 90,
+    difficulty: "hard",
+    description: "A rich and thick classic Creole gumbo loaded with shrimp, crab, and tender okra."
+  },
+  {
+    id: "southern-chicken-okra-gumbo",
+    name: "Chicken and Okra Gumbo",
+    cuisine: "Southern/Soul",
+    mealType: ["dinner"],
+    ingredients: ["okra", "chicken", "sausage", "onion", "celery", "bell pepper", "garlic", "flour", "chicken broth", "oil", "salt"],
+    prepTime: 75,
+    difficulty: "hard",
+    description: "A hearty Southern stew with chicken, sausage, and okra serving as a natural thickener."
+  },
+  {
+    id: "mediterranean-bamya",
+    name: "Bamya (Okra and Lamb Stew)",
+    cuisine: "Middle Eastern",
+    mealType: ["dinner"],
+    ingredients: ["okra", "lamb", "tomato", "tomato paste", "onion", "garlic", "coriander", "lemon", "olive oil", "salt"],
+    prepTime: 60,
+    difficulty: "medium",
+    description: "A traditional Middle Eastern stew of tender lamb and baby okra simmered in a garlicky tomato sauce."
+  },
+  {
+    id: "creole-smothered-okra",
+    name: "Creole Smothered Okra",
+    cuisine: "Southern/Soul",
+    mealType: ["lunch", "dinner"],
+    ingredients: ["okra", "tomato", "onion", "bell pepper", "celery", "bacon", "garlic", "thyme", "salt"],
+    prepTime: 40,
+    difficulty: "medium",
+    description: "Okra slow-simmered with tomatoes, bacon, and the holy trinity of Creole cooking."
+  },
+  {
+    id: "american-roasted-okra",
+    name: "Crispy Roasted Okra",
+    cuisine: "American",
+    mealType: ["dinner"],
+    ingredients: ["okra", "olive oil", "garlic powder", "paprika", "salt", "black pepper"],
+    prepTime: 20,
+    difficulty: "easy",
+    description: "Whole okra pods tossed in olive oil and spices, roasted until crispy and delicious."
+  },
+  {
+    id: "japanese-okra-tempura",
+    name: "Okra Tempura",
+    cuisine: "Japanese",
+    mealType: ["lunch"],
+    ingredients: ["okra", "flour", "cornstarch", "egg", "water", "oil", "soy sauce", "mirin", "salt"],
+    prepTime: 20,
+    difficulty: "medium",
+    description: "Light and crispy Japanese-style battered and deep-fried okra pods."
+  },
+  {
+    id: "thai-okra-stir-fry",
+    name: "Spicy Thai Stir-Fried Okra",
+    cuisine: "Thai",
+    mealType: ["dinner"],
+    ingredients: ["okra", "garlic", "chili", "soy sauce", "fish sauce", "basil", "oil", "sugar"],
+    prepTime: 15,
+    difficulty: "easy",
+    description: "Quick wok-tossed okra with fiery red chilies, garlic, and fresh sweet Thai basil."
+  },
+  {
+    id: "chinese-okra-garlic",
+    name: "Garlic Steamed Okra",
+    cuisine: "Chinese",
+    mealType: ["lunch"],
+    ingredients: ["okra", "garlic", "soy sauce", "sesame oil", "sugar", "oil"],
+    prepTime: 15,
+    difficulty: "easy",
+    description: "Tender steamed okra halves drizzled with a warm garlic-infused soy sauce dressing."
+  },
+  {
+    id: "mexican-okra-salsa",
+    name: "Charred Okra and Corn Salsa",
+    cuisine: "Mexican",
+    mealType: ["lunch"],
+    ingredients: ["okra", "corn", "tomato", "red onion", "jalapeno", "cilantro", "lime", "olive oil", "salt"],
+    prepTime: 20,
+    difficulty: "easy",
+    description: "A colorful, smoky salsa of skillet-charred okra, sweet corn, tomatoes, and lime juice."
+  },
+  {
+    id: "mediterranean-roasted-vegetables",
+    name: "Greek Baked Okra (Bamiye)",
+    cuisine: "Mediterranean",
+    mealType: ["dinner"],
+    ingredients: ["okra", "tomato", "onion", "garlic", "oregano", "olive oil", "feta cheese", "salt"],
+    prepTime: 50,
+    difficulty: "easy",
+    description: "Okra baked in a rich tomato and herb sauce, finished with a crumble of feta cheese."
+  },
+  {
+    id: "southern-succotash-okra",
+    name: "Okra and Corn Succotash",
+    cuisine: "Southern/Soul",
+    mealType: ["lunch"],
+    ingredients: ["okra", "corn", "lima bean", "bell pepper", "bacon", "butter", "cream", "salt"],
+    prepTime: 25,
+    difficulty: "easy",
+    description: "A classic Southern side dish made main: sweet corn, lima beans, and okra simmered with bacon."
   }
 ];
 
@@ -1410,6 +1550,7 @@ const COMMON_GROCERIES = [
   "corn",
   "cornmeal",
   "cornstarch",
+  "crab",
   "cream",
   "cucumber",
   "cumin",
@@ -1448,6 +1589,7 @@ const COMMON_GROCERIES = [
   "lemongrass",
   "lentil",
   "lettuce",
+  "lima bean",
   "lime",
   "maple syrup",
   "mayonnaise",
@@ -1461,6 +1603,7 @@ const COMMON_GROCERIES = [
   "nori",
   "oat",
   "oil",
+  "okra",
   "olive",
   "olive oil",
   "onion",

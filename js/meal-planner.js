@@ -75,7 +75,14 @@ const MealPlanner = {
     const allFlags = new Set();
     profiles.forEach(p => p.dietaryFlags?.forEach(f => allFlags.add(f)));
 
-    const allRecipes = typeof RECIPES !== 'undefined' ? RECIPES : [];
+    let customRecipes = [];
+    try {
+      const stored = localStorage.getItem('wfd_custom_recipes');
+      if (stored) customRecipes = JSON.parse(stored);
+    } catch (e) {
+      customRecipes = [];
+    }
+    const allRecipes = [...(typeof RECIPES !== 'undefined' ? RECIPES : []), ...customRecipes];
     const cuisineNames = this._getCuisineNames(selectedCuisines);
 
     // Filter by cuisine
@@ -89,17 +96,20 @@ const MealPlanner = {
     }
 
     // Build combined "have" set: groceries + pantry staples
-    const haveSet = new Set([...this.groceries, ...this.pantryStaples]);
+    const haveNormalized = new Set([...this.groceries, ...this.pantryStaples].map(i => this._normalizeIngredient(i)));
 
     // Score and annotate each recipe
     const scoredRecipes = filteredRecipes.map(recipe => {
       const ingredients = recipe.ingredients || [];
-      const matched  = ingredients.filter(i => haveSet.has(i.toLowerCase()));
-      const missing  = ingredients.filter(i => !haveSet.has(i.toLowerCase()));
+      const matched  = ingredients.filter(i => haveNormalized.has(this._normalizeIngredient(i)));
+      const missing  = ingredients.filter(i => !haveNormalized.has(this._normalizeIngredient(i)));
       // Pantry staples used in this recipe (informational)
-      const pantryUsed = ingredients.filter(i =>
-        this.pantryStaples.includes(i.toLowerCase()) && !this.groceries.includes(i.toLowerCase())
-      );
+      const pantryUsed = ingredients.filter(i => {
+        const norm = this._normalizeIngredient(i);
+        const isStaple = this.pantryStaples.map(s => this._normalizeIngredient(s)).includes(norm);
+        const isGrocery = this.groceries.map(g => this._normalizeIngredient(g)).includes(norm);
+        return isStaple && !isGrocery;
+      });
 
       // Dietary conflict: any ingredient is a protein with a matching swap?
       const dietarySwap = this._findDietarySwap(recipe, allFlags);
@@ -185,11 +195,202 @@ const MealPlanner = {
     return null;
   },
 
+  /**
+   * Normalize an ingredient name by converting to lowercase, stripping plurals, 
+   * stripping common modifiers (fresh, organic, ground, chopped, etc.), and resolving synonyms.
+   * @private
+   * @param {string} name - The ingredient name
+   * @returns {string} The normalized ingredient name
+   */
+  _normalizeIngredient(name) {
+    if (!name) return '';
+    let s = name.toLowerCase().trim();
+
+    // Synonym mapping
+    const synonyms = {
+      "bhindi": "okra",
+      "lady's finger": "okra",
+      "ladyfinger": "okra",
+      "coriander": "cilantro",
+      "coriander leaves": "cilantro",
+      "green onion": "scallion",
+      "spring onion": "scallion",
+      "eggplant": "aubergine",
+      "bell pepper": "pepper",
+      "sweet potato": "yam",
+      "chili": "chili pepper",
+      "chili powder": "chili",
+      "ground beef": "beef",
+      "ground pork": "pork",
+      "chicken breast": "chicken",
+      "chicken thigh": "chicken",
+      "flour": "all-purpose flour",
+      "sugar": "white sugar"
+    };
+
+    // Common descriptors/modifiers to ignore
+    const modifiers = [
+      "fresh", "organic", "raw", "chopped", "diced", "sliced", "canned", 
+      "ground", "powder", "pods", "dried", "grated", "shredded", "pureed", 
+      "crushed", "cooked", "cloves of", "heads of", "cloves", "whole"
+    ];
+
+    modifiers.forEach(mod => {
+      const reg = new RegExp(`\\b${mod}\\b`, 'g');
+      s = s.replace(reg, '');
+    });
+
+    s = s.replace(/\s+/g, ' ').trim();
+
+    if (synonyms[s]) {
+      s = synonyms[s];
+    }
+
+    // Basic singularization
+    if (s.endsWith('ies')) {
+      s = s.slice(0, -3) + 'y';
+    } else if (s.endsWith('es') && !s.endsWith('cheese') && !s.endsWith('sauce')) {
+      s = s.slice(0, -2);
+    } else if (s.endsWith('s') && !s.endsWith('couscous') && !s.endsWith('hummus') && !s.endsWith('molasses') && !s.endsWith('grass')) {
+      s = s.slice(0, -1);
+    }
+
+    return s;
+  },
+
   /** @private Score a recipe by ingredient availability */
   _scoreRecipe(recipe) {
     if (!recipe.ingredients?.length) return 0;
-    const haveSet = new Set([...this.groceries, ...this.pantryStaples]);
-    return recipe.ingredients.filter(i => haveSet.has(i.toLowerCase())).length / recipe.ingredients.length;
+    const haveNormalized = new Set([...this.groceries, ...this.pantryStaples].map(i => this._normalizeIngredient(i)));
+    const matchedCount = recipe.ingredients.filter(i => haveNormalized.has(this._normalizeIngredient(i))).length;
+    return matchedCount / recipe.ingredients.length;
+  },
+
+  /**
+   * Search and fetch recipes from TheMealDB API based on user's pantry ingredients.
+   * Parse them into internal format and store them in localStorage custom recipes.
+   * @returns {Promise<number>} Number of newly imported recipes
+   */
+  async searchWebRecipes() {
+    if (!this.groceries || this.groceries.length === 0) return 0;
+
+    const staples = new Set(['salt', 'pepper', 'oil', 'water', 'butter', 'flour', 'sugar', 'garlic', 'onion', 'ginger', 'oil']);
+    const searchIngredients = this.groceries
+      .filter(g => !staples.has(g.toLowerCase()))
+      .slice(0, 5); // Limit search to first 5 primary ingredients
+
+    if (searchIngredients.length === 0) {
+      searchIngredients.push(this.groceries[0]);
+    }
+
+    let customRecipes = [];
+    try {
+      const stored = localStorage.getItem('wfd_custom_recipes');
+      if (stored) customRecipes = JSON.parse(stored);
+    } catch {
+      customRecipes = [];
+    }
+
+    const existingIds = new Set(customRecipes.map(r => r.id));
+    const importedRecipes = [];
+
+    // Run parallel search for each ingredient
+    const searchPromises = searchIngredients.map(async (ing) => {
+      try {
+        const url = `https://www.themealdb.com/api/json/v1/1/filter.php?i=${encodeURIComponent(ing)}`;
+        const res = await fetch(url);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data || !data.meals) return;
+
+        // Take up to 3 meals per ingredient
+        const mealsToFetch = data.meals.slice(0, 3);
+        
+        for (const meal of mealsToFetch) {
+          const webId = `web-${meal.idMeal}`;
+          if (existingIds.has(webId) || importedRecipes.some(r => r.id === webId)) {
+            continue;
+          }
+
+          // Fetch meal details
+          const detailUrl = `https://www.themealdb.com/api/json/v1/1/lookup.php?i=${meal.idMeal}`;
+          const detailRes = await fetch(detailUrl);
+          if (!detailRes.ok) continue;
+          const detailData = await detailRes.json();
+          if (!detailData || !detailData.meals || detailData.meals.length === 0) continue;
+
+          const m = detailData.meals[0];
+          
+          // Parse ingredients
+          const ingredients = [];
+          for (let k = 1; k <= 20; k++) {
+            const ingName = m[`strIngredient${k}`];
+            if (ingName && ingName.trim()) {
+              ingredients.push(ingName.trim().toLowerCase());
+            }
+          }
+
+          // Normalize cuisine mapping
+          let cuisine = m.strArea || 'American';
+          const cuisineMap = {
+            'british': 'American',
+            'irish': 'American',
+            'canadian': 'American',
+            'american': 'American',
+            'french': 'French',
+            'italian': 'Italian',
+            'indian': 'Indian',
+            'mexican': 'Mexican',
+            'chinese': 'Chinese',
+            'japanese': 'Japanese',
+            'thai': 'Thai',
+            'vietnamese': 'Thai',
+            'moroccan': 'Mediterranean',
+            'greek': 'Mediterranean',
+            'turkish': 'Middle Eastern',
+            'egyptian': 'Middle Eastern',
+            'croatian': 'Mediterranean',
+            'tunisian': 'Middle Eastern',
+            'jamaican': 'Southern/Soul',
+            'kenyan': 'Southern/Soul'
+          };
+          cuisine = cuisineMap[cuisine.toLowerCase()] || cuisine;
+
+          // Determine mealType
+          let mealType = ['dinner'];
+          const cat = (m.strCategory || '').toLowerCase();
+          if (cat === 'breakfast') {
+            mealType = ['breakfast'];
+          } else if (cat === 'dessert' || cat === 'side') {
+            mealType = ['breakfast', 'lunch'];
+          } else {
+            mealType = ['lunch', 'dinner'];
+          }
+
+          importedRecipes.push({
+            id: webId,
+            name: m.strMeal,
+            cuisine: cuisine,
+            mealType: mealType,
+            ingredients: ingredients,
+            prepTime: 15 + (ingredients.length * 2),
+            difficulty: ingredients.length > 10 ? 'medium' : 'easy',
+            description: m.strInstructions ? m.strInstructions.slice(0, 150) + '...' : 'A delicious web recipe.'
+          });
+        }
+      } catch (err) {
+        console.warn(`Failed searching recipes for ${ing}:`, err);
+      }
+    });
+
+    await Promise.all(searchPromises);
+
+    if (importedRecipes.length > 0) {
+      customRecipes.push(...importedRecipes);
+      localStorage.setItem('wfd_custom_recipes', JSON.stringify(customRecipes));
+    }
+
+    return importedRecipes.length;
   },
 
   /** @private Map cuisine IDs → display names */
@@ -293,6 +494,9 @@ const MealPlanner = {
           <button class="btn btn-secondary btn-sm" id="btn-open-shopping-list" aria-label="Open shopping list">
             🛒 Shopping List
           </button>
+          <button class="btn btn-secondary btn-sm" id="btn-fetch-web" aria-label="Search Web Recipes">
+            🌐 Search Web Recipes
+          </button>
           <button class="btn btn-secondary btn-sm" id="btn-regenerate" aria-label="Regenerate meal plan">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="regenerate-icon">
               <polyline points="23 4 23 10 17 10"></polyline>
@@ -344,6 +548,31 @@ const MealPlanner = {
 
     document.getElementById('btn-open-shopping-list')?.addEventListener('click', () => {
       if (typeof ShoppingList !== 'undefined') ShoppingList.open();
+    });
+
+    document.getElementById('btn-fetch-web')?.addEventListener('click', async () => {
+      const btn = document.getElementById('btn-fetch-web');
+      if (btn.disabled) return;
+      btn.disabled = true;
+      btn.innerHTML = `⏳ Searching Web...`;
+      
+      try {
+        const count = await this.searchWebRecipes();
+        if (count > 0) {
+          if (typeof App !== 'undefined') App._showToast(`🌐 Imported ${count} new recipes from the web!`, 'success');
+          // Regenerate plan
+          this.render(container, groceries, selectedCuisines, profiles, pantryStaples);
+        } else {
+          if (typeof App !== 'undefined') App._showToast(`🔍 No new recipes found on the web matching your ingredients.`, 'info');
+          btn.disabled = false;
+          btn.innerHTML = `🌐 Search Web Recipes`;
+        }
+      } catch (err) {
+        console.error(err);
+        if (typeof App !== 'undefined') App._showToast(`⚠️ Error fetching recipes: ${err.message}`, 'error');
+        btn.disabled = false;
+        btn.innerHTML = `🌐 Search Web Recipes`;
+      }
     });
 
     document.getElementById('btn-regenerate')?.addEventListener('click', () => {
@@ -532,12 +761,15 @@ const MealPlanner = {
     });
     
     // Matched vs Missing
-    const haveSet = new Set([...this.groceries, ...this.pantryStaples]);
-    const matched = allIngredients.filter(i => haveSet.has(i.toLowerCase()));
-    const missing = allIngredients.filter(i => !haveSet.has(i.toLowerCase()));
-    const pantry = allIngredients.filter(i => 
-      this.pantryStaples.includes(i.toLowerCase()) && !this.groceries.includes(i.toLowerCase())
-    );
+    const haveNormalized = new Set([...this.groceries, ...this.pantryStaples].map(i => this._normalizeIngredient(i)));
+    const matched = allIngredients.filter(i => haveNormalized.has(this._normalizeIngredient(i)));
+    const missing = allIngredients.filter(i => !haveNormalized.has(this._normalizeIngredient(i)));
+    const pantry = allIngredients.filter(i => {
+      const norm = this._normalizeIngredient(i);
+      const isStaple = this.pantryStaples.map(s => this._normalizeIngredient(s)).includes(norm);
+      const isGrocery = this.groceries.map(g => this._normalizeIngredient(g)).includes(norm);
+      return isStaple && !isGrocery;
+    });
     
     return {
       servings,
