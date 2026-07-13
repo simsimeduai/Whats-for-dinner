@@ -75,7 +75,14 @@ const MealPlanner = {
     const allFlags = new Set();
     profiles.forEach(p => p.dietaryFlags?.forEach(f => allFlags.add(f)));
 
-    const allRecipes = typeof RECIPES !== 'undefined' ? RECIPES : [];
+    let customRecipes = [];
+    try {
+      const stored = localStorage.getItem('wfd_custom_recipes');
+      if (stored) customRecipes = JSON.parse(stored);
+    } catch (e) {
+      customRecipes = [];
+    }
+    const allRecipes = [...(typeof RECIPES !== 'undefined' ? RECIPES : []), ...customRecipes];
     const cuisineNames = this._getCuisineNames(selectedCuisines);
 
     // Filter by cuisine

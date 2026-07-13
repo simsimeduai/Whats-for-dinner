@@ -222,19 +222,26 @@ const OCREngine = {
 
     lines = lines.filter((line) => !onlyPricePattern.test(line.trim()));
 
-    // Step 7: Strip trailing prices and quantity prefixes from remaining lines
+    // Step 7: Strip trailing prices, quantity prefixes, weights/units, and single/double letter noise
     lines = lines.map((line) => {
       let cleaned = line;
 
-      // Remove trailing price patterns like "$12.99", "12.99", "$1.99 F", "1.99 T"
-      cleaned = cleaned.replace(/\s+\$?\d+\.\d{2}\s*[A-Z]?\s*$/, '');
+      // Remove trailing price patterns like "$12.99", "12.99", "$1.99 F", "1.99 T", "2.00 F Py", "2 49 F"
+      cleaned = cleaned.replace(/\s+\$?\d+[\.\s]\d{2}\s*[a-zA-Z]*\s*[a-zA-Z]*\s*$/, '');
       // Also handle prices without decimal
-      cleaned = cleaned.replace(/\s+\$\d+\s*$/, '');
+      cleaned = cleaned.replace(/\s+\$?\d+\s*[a-zA-Z]*\s*$/, '');
 
       // Remove leading quantity prefixes like "2 x ", "2x ", "3 X ", "1 @ "
       cleaned = cleaned.replace(/^\s*\d+\s*[xX@]\s+/, '');
       // Also handle "2x" directly attached
       cleaned = cleaned.replace(/^\s*\d+[xX]\s*/, '');
+
+      // Remove quantity/weight suffixes at the end of the line: "1 kg", "500 gm", "1 lt", "100g", "453g", "300g", "1.38 lb", "0.615 kg"
+      cleaned = cleaned.replace(/\s+\d+(\.\d+)?\s*(kg|g|gm|lt|l|ml|oz|lb|lbs|kb|bm)\b/i, '');
+      cleaned = cleaned.replace(/\s+\d+(\.\d+)?(kg|g|gm|lt|l|ml|oz|lb|lbs|kb|bm)\b/i, '');
+
+      // Remove trailing standalone or paired letters representing receipt tax codes/noise (e.g. F, T, Py, ER, Rig, Py)
+      cleaned = cleaned.replace(/\s+[a-zA-Z]{1,3}\s*$/, '');
 
       return cleaned;
     });
@@ -318,3 +325,7 @@ const OCREngine = {
     }
   },
 };
+
+if (typeof module !== 'undefined') {
+  module.exports = OCREngine;
+}
