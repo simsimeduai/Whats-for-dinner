@@ -296,16 +296,27 @@ const GroceryInput = {
     const wrapper = document.createElement('div');
     wrapper.className = 'scan-input-wrapper';
 
-    // Dropzone
+    const isNative = typeof NativeBridge !== 'undefined' && NativeBridge.isNative;
+
+    // Mobile camera action buttons + dropzone fallback
     wrapper.innerHTML = `
-      <div class="dropzone" id="scan-dropzone">
+      <div class="mobile-camera-actions" id="mobile-camera-actions">
+        <button type="button" class="btn btn-primary mobile-cam-btn" id="btn-take-receipt-photo" aria-label="Take a photo of your receipt">
+          📷 Take Receipt Photo
+        </button>
+        <button type="button" class="btn btn-secondary mobile-cam-btn" id="btn-pick-receipt-photo" aria-label="Choose a receipt photo from library">
+          🖼️ Photo Library
+        </button>
+      </div>
+      <div class="dropzone ${isNative ? 'hidden' : ''}" id="scan-dropzone">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="dropzone-icon">
           <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
           <circle cx="12" cy="13" r="4"></circle>
         </svg>
-        <p class="dropzone-text">Drop a receipt image here or click to browse</p>
+        <p class="dropzone-text">Tap to scan or drop a receipt image here</p>
         <p class="dropzone-hint">Supports JPG, PNG, WEBP</p>
         <input type="file" id="scan-file-input" accept="image/*" class="hidden" aria-label="Upload receipt image">
+        <input type="file" id="scan-camera-input" accept="image/*" capture="environment" class="hidden" aria-label="Take receipt photo">
       </div>
       <div class="ocr-progress hidden" id="ocr-progress">
         <div class="progress-bar-track">
@@ -327,22 +338,51 @@ const GroceryInput = {
     `;
     container.appendChild(wrapper);
 
-    // ── Dropzone Events ──
+    // ── Camera & Dropzone Events ──
     const dropzone = document.getElementById('scan-dropzone');
     const fileInput = document.getElementById('scan-file-input');
+    const cameraInput = document.getElementById('scan-camera-input');
+    const takePhotoBtn = document.getElementById('btn-take-receipt-photo');
+    const pickPhotoBtn = document.getElementById('btn-pick-receipt-photo');
 
-    dropzone.addEventListener('click', () => fileInput.click());
+    takePhotoBtn?.addEventListener('click', async () => {
+      if (isNative) {
+        try {
+          const file = await NativeBridge.captureReceiptPhoto('camera');
+          if (file) this._processReceiptImage(file);
+        } catch (err) {
+          if (typeof App !== 'undefined') App._showToast(`Camera unavailable: ${err.message}`, 'error');
+        }
+      } else {
+        cameraInput?.click();
+      }
+    });
 
-    dropzone.addEventListener('dragover', (e) => {
+    pickPhotoBtn?.addEventListener('click', async () => {
+      if (isNative) {
+        try {
+          const file = await NativeBridge.captureReceiptPhoto('photos');
+          if (file) this._processReceiptImage(file);
+        } catch (err) {
+          if (typeof App !== 'undefined') App._showToast(`Photo library unavailable: ${err.message}`, 'error');
+        }
+      } else {
+        fileInput?.click();
+      }
+    });
+
+    dropzone?.addEventListener('click', () => fileInput.click());
+
+    dropzone?.addEventListener('dragover', (e) => {
       e.preventDefault();
       dropzone.classList.add('dragover');
     });
 
-    dropzone.addEventListener('dragleave', () => {
+    dropzone?.addEventListener('dragleave', () => {
       dropzone.classList.remove('dragover');
     });
 
-    dropzone.addEventListener('drop', (e) => {
+    dropzone?.addEventListener('drop', (e) => {
       e.preventDefault();
       dropzone.classList.remove('dragover');
       const file = e.dataTransfer.files[0];
@@ -351,12 +391,16 @@ const GroceryInput = {
       }
     });
 
-    fileInput.addEventListener('change', () => {
-      const file = fileInput.files[0];
+    const handleFileChange = (inputEl) => {
+      const file = inputEl.files[0];
       if (file) {
         this._processReceiptImage(file);
+        inputEl.value = '';
       }
-    });
+    };
+
+    fileInput?.addEventListener('change', () => handleFileChange(fileInput));
+    cameraInput?.addEventListener('change', () => handleFileChange(cameraInput));
   },
 
   /**
@@ -365,13 +409,16 @@ const GroceryInput = {
    */
   async _processReceiptImage(file) {
     const dropzone = document.getElementById('scan-dropzone');
+    const mobileActions = document.getElementById('mobile-camera-actions');
     const progress = document.getElementById('ocr-progress');
     const progressFill = document.getElementById('ocr-progress-fill');
     const progressText = document.getElementById('ocr-progress-text');
     const results = document.getElementById('ocr-results');
+    const isNative = typeof NativeBridge !== 'undefined' && NativeBridge.isNative;
 
-    // Show progress, hide dropzone
-    dropzone.classList.add('hidden');
+    // Show progress, hide dropzone & camera actions
+    dropzone?.classList.add('hidden');
+    mobileActions?.classList.add('hidden');
     progress.classList.remove('hidden');
     results.classList.add('hidden');
 
@@ -386,16 +433,19 @@ const GroceryInput = {
       // Show results
       progress.classList.add('hidden');
       results.classList.remove('hidden');
+      if (typeof NativeBridge !== 'undefined') NativeBridge.haptic('success');
       this._renderOCRResults(result.items);
 
     } catch (error) {
       progressText.textContent = `Error: ${error.message}. Please try again.`;
       progressFill.style.width = '100%';
       progressFill.style.background = 'hsl(0, 70%, 50%)';
+      if (typeof NativeBridge !== 'undefined') NativeBridge.haptic('warning');
 
       setTimeout(() => {
         progress.classList.add('hidden');
-        dropzone.classList.remove('hidden');
+        mobileActions?.classList.remove('hidden');
+        if (!isNative) dropzone?.classList.remove('hidden');
       }, 3000);
     }
   },
@@ -425,7 +475,8 @@ const GroceryInput = {
 
     // Confirm button
     const confirmBtn = document.getElementById('btn-confirm-ocr');
-    confirmBtn.addEventListener('click', () => {
+    const isNative = typeof NativeBridge !== 'undefined' && NativeBridge.isNative;
+    confirmBtn.onclick = () => {
       const checkedItems = list.querySelectorAll('.ocr-item');
       checkedItems.forEach(row => {
         const checkbox = row.querySelector('.ocr-checkbox');
@@ -436,9 +487,10 @@ const GroceryInput = {
       });
 
       // Reset scan area
-      document.getElementById('ocr-results').classList.add('hidden');
-      document.getElementById('scan-dropzone').classList.remove('hidden');
-    });
+      document.getElementById('ocr-results')?.classList.add('hidden');
+      document.getElementById('mobile-camera-actions')?.classList.remove('hidden');
+      if (!isNative) document.getElementById('scan-dropzone')?.classList.remove('hidden');
+    };
   },
 
   /**
@@ -618,6 +670,11 @@ const GroceryInput = {
     this.groceries.push(normalized);
     this._renderGroceryList();
     this._updateSuggestionChips();
+    if (typeof NativeBridge !== 'undefined') NativeBridge.haptic('light');
+    if (typeof App !== 'undefined' && typeof App._persistSession === 'function') {
+      App.groceries = [...this.groceries];
+      App._persistSession();
+    }
   },
 
   /**
@@ -628,6 +685,11 @@ const GroceryInput = {
     this.groceries.splice(index, 1);
     this._renderGroceryList();
     this._updateSuggestionChips();
+    if (typeof NativeBridge !== 'undefined') NativeBridge.haptic('light');
+    if (typeof App !== 'undefined' && typeof App._persistSession === 'function') {
+      App.groceries = [...this.groceries];
+      App._persistSession();
+    }
   },
 
   /** Render the grocery items as removable chips. */
@@ -731,7 +793,8 @@ const GroceryInput = {
    */
   _loadPantryStaples() {
     try {
-      const stored = localStorage.getItem('wfd_pantry_staples');
+      const store = typeof StorageAdapter !== 'undefined' ? StorageAdapter : localStorage;
+      const stored = store.getItem('wfd_pantry_staples');
       if (stored) {
         this.pantryStaples = JSON.parse(stored);
       } else {
@@ -746,12 +809,13 @@ const GroceryInput = {
   },
 
   /**
-   * Save pantry staples to localStorage.
+   * Save pantry staples to persistent storage.
    * @private
    */
   _savePantryStaples() {
     try {
-      localStorage.setItem('wfd_pantry_staples', JSON.stringify(this.pantryStaples));
+      const store = typeof StorageAdapter !== 'undefined' ? StorageAdapter : localStorage;
+      store.setItem('wfd_pantry_staples', JSON.stringify(this.pantryStaples));
     } catch (e) {
       console.warn('Could not save pantry staples:', e);
     }
@@ -896,20 +960,22 @@ const GroceryInput = {
     return intersection.size / (b1.size + b2.size - intersection.size);
   },
 
-  /** Load custom recipes from localStorage. */
+  /** Load custom recipes from persistent storage. */
   _loadCustomRecipes() {
     try {
-      const stored = localStorage.getItem('wfd_custom_recipes');
+      const store = typeof StorageAdapter !== 'undefined' ? StorageAdapter : localStorage;
+      const stored = store.getItem('wfd_custom_recipes');
       return stored ? JSON.parse(stored) : [];
     } catch (e) {
       return [];
     }
   },
 
-  /** Save custom recipes to localStorage. */
+  /** Save custom recipes to persistent storage. */
   _saveCustomRecipes(recipes) {
     try {
-      localStorage.setItem('wfd_custom_recipes', JSON.stringify(recipes));
+      const store = typeof StorageAdapter !== 'undefined' ? StorageAdapter : localStorage;
+      store.setItem('wfd_custom_recipes', JSON.stringify(recipes));
     } catch (e) {
       console.warn('Could not save custom recipes:', e);
     }
@@ -1175,3 +1241,11 @@ const GroceryInput = {
     });
   },
 };
+
+if (typeof window !== 'undefined') {
+  window.GroceryInput = GroceryInput;
+}
+
+if (typeof module !== 'undefined') {
+  module.exports = GroceryInput;
+}

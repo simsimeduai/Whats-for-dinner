@@ -309,6 +309,11 @@ const CuisinePicker = {
       card.setAttribute("aria-checked", String(isSelected));
       this._updateCount();
       this._syncToggleLabel();
+      if (typeof NativeBridge !== "undefined") NativeBridge.haptic("light");
+      if (typeof App !== "undefined" && typeof App._persistSession === "function") {
+        App.selectedCuisines = this.getSelected();
+        App._persistSession();
+      }
     });
 
     /* Keyboard support (Enter / Space) */
@@ -388,12 +393,13 @@ const CuisinePicker = {
   },
 
   /**
-   * Load dietary profiles from localStorage.
+   * Load dietary profiles from persistent storage.
    * @private
    */
   _loadProfiles() {
     try {
-      const stored = localStorage.getItem('wfd_profiles');
+      const store = typeof StorageAdapter !== 'undefined' ? StorageAdapter : localStorage;
+      const stored = store.getItem('wfd_profiles');
       this._profiles = stored ? JSON.parse(stored) : [];
     } catch (e) {
       this._profiles = [];
@@ -401,12 +407,13 @@ const CuisinePicker = {
   },
 
   /**
-   * Save profiles to localStorage.
+   * Save profiles to persistent storage.
    * @private
    */
   _saveProfiles() {
     try {
-      localStorage.setItem('wfd_profiles', JSON.stringify(this._profiles));
+      const store = typeof StorageAdapter !== 'undefined' ? StorageAdapter : localStorage;
+      store.setItem('wfd_profiles', JSON.stringify(this._profiles));
     } catch (e) {
       console.warn('Could not save profiles:', e);
     }
@@ -690,3 +697,11 @@ const CuisinePicker = {
     return { flags: [...flags], allergies: [...allergies] };
   }
 };
+
+if (typeof window !== 'undefined') {
+  window.CuisinePicker = CuisinePicker;
+}
+
+if (typeof module !== 'undefined') {
+  module.exports = CuisinePicker;
+}

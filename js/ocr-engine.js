@@ -49,14 +49,24 @@ const OCREngine = {
     try {
       const imageBitmap = await createImageBitmap(file);
 
-      // Create an off-screen canvas matching the image dimensions
+      // Downscale high-res mobile camera captures (e.g. 12MP+) to prevent WebView OOM & speed up OCR
+      const MAX_DIMENSION = 1600;
+      let targetWidth = imageBitmap.width;
+      let targetHeight = imageBitmap.height;
+      if (targetWidth > MAX_DIMENSION || targetHeight > MAX_DIMENSION) {
+        const scale = MAX_DIMENSION / Math.max(targetWidth, targetHeight);
+        targetWidth = Math.round(targetWidth * scale);
+        targetHeight = Math.round(targetHeight * scale);
+      }
+
+      // Create an off-screen canvas matching the scaled image dimensions
       const canvas = document.createElement('canvas');
-      canvas.width = imageBitmap.width;
-      canvas.height = imageBitmap.height;
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
       const ctx = canvas.getContext('2d');
 
-      // Draw the original image
-      ctx.drawImage(imageBitmap, 0, 0);
+      // Draw the original image (scaled if needed)
+      ctx.drawImage(imageBitmap, 0, 0, targetWidth, targetHeight);
       imageBitmap.close();
 
       // Get pixel data for processing
@@ -176,7 +186,7 @@ const OCREngine = {
     const headerWords =
       /\b(STORE|MART|WELCOME|THANK|RECEIPT|TRANSACTION|SUPERMARKET|GROCERY|INC|LLC|LTD)\b/i;
     const phonePattern = /\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/;
-    const addressPattern = /\d+\s+[\w\s]+(ST|AVE|BLVD|RD|DR|LN|CT|WAY|PKWY|PL|HWY)\b/i;
+    const addressPattern = /\d+\s+[\w\s]+\b(ST|AVE|BLVD|RD|DR|LN|CT|WAY|PKWY|PL|HWY)\b/i;
 
     lines = lines.filter((line) => {
       const trimmed = line.trim();
@@ -325,6 +335,10 @@ const OCREngine = {
     }
   },
 };
+
+if (typeof window !== 'undefined') {
+  window.OCREngine = OCREngine;
+}
 
 if (typeof module !== 'undefined') {
   module.exports = OCREngine;
