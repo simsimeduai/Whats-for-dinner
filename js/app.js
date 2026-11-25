@@ -93,6 +93,21 @@ const App = {
       });
     });
 
+    // Clicking the brand logo returns to Step 1
+    const logo = document.getElementById('app-logo');
+    const goHome = () => {
+      if (this.currentStep > 1) {
+        this._goToStep(1);
+      }
+    };
+    logo?.addEventListener('click', goHome);
+    logo?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        goHome();
+      }
+    });
+
     // Keyboard navigation
     document.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowRight' && e.altKey) {
@@ -148,6 +163,9 @@ const App = {
       this._renderStep(step);
       this._updateStepper();
       this._updateNavButtons();
+      if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
+        window.scrollTo(0, 0);
+      }
 
       // Remove entrance animation class after it plays
       setTimeout(() => main.classList.remove('screen-enter'), 500);

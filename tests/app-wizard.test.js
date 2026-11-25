@@ -96,4 +96,22 @@ describe('App 3-step wizard integration', () => {
     expect(document.getElementById('shopping-fab').classList.contains('hidden')).toBe(false);
     expect(document.querySelectorAll('.day-block')).toHaveLength(7);
   });
+
+  test('renders stepper inside compact top header and navigates home when clicking logo', () => {
+    App.init();
+    const header = document.getElementById('app-header');
+    const stepper = document.getElementById('stepper');
+    expect(header.contains(stepper)).toBe(true);
+
+    // Move to Step 2 then click logo to return to Step 1
+    GroceryInput._addGrocery('chicken');
+    document.getElementById('btn-next').click();
+    jest.advanceTimersByTime(300);
+    expect(App.currentStep).toBe(2);
+
+    document.getElementById('app-logo').click();
+    jest.advanceTimersByTime(300);
+    expect(App.currentStep).toBe(1);
+  });
 });
+

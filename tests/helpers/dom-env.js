@@ -45,6 +45,7 @@ function setupDomEnv({ loadIndexHtml = false } = {}) {
   }
   global.URL = window.URL;
   window.print = jest.fn();
+  window.scrollTo = jest.fn();
 
   // Attach recipe data globals just like browser <script src="js/recipe-data.js">
   global.RECIPES = recipeData.RECIPES;
