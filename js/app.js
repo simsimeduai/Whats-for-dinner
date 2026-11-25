@@ -31,15 +31,91 @@ const App = {
      State Management (app initialization)
      ══════════════════════════════════════════════════════════════════════ */
 
-  /** Boot the application. Called on DOMContentLoaded. */
+  /** @type {boolean} Prevent double initialization when loaded as ES module */
+  _booted: false,
+
+  /** Boot the application. Called on DOMContentLoaded or from js/main.js. */
   init() {
+    if (this._booted) return;
+    this._booted = true;
+
+    this._restoreSession();
     this._bindNavigation();
     if (typeof ShoppingList !== 'undefined') {
       ShoppingList.init();
     }
-    this._renderStep(1);
+    this._renderStep(this.currentStep);
     this._updateStepper();
     this._updateNavButtons();
+  },
+
+  /**
+   * Restore wizard session state (groceries, cuisines, step) after app relaunch.
+   * @private
+   */
+  _restoreSession() {
+    try {
+      const store = typeof StorageAdapter !== 'undefined' ? StorageAdapter : localStorage;
+      const raw = store.getItem('wfd_session_state');
+      if (!raw) return;
+      const saved = JSON.parse(raw);
+      if (Array.isArray(saved.groceries)) this.groceries = saved.groceries;
+      if (Array.isArray(saved.selectedCuisines)) this.selectedCuisines = saved.selectedCuisines;
+      const step = Number(saved.currentStep) || 1;
+      // Only jump directly to step 2/3 if prerequisite data exists
+      if (step === 3 && this.groceries.length > 0 && this.selectedCuisines.length > 0) {
+        this.currentStep = 3;
+      } else if (step === 2 && this.groceries.length > 0) {
+        this.currentStep = 2;
+      } else {
+        this.currentStep = 1;
+      }
+    } catch {
+      this.currentStep = 1;
+    }
+  },
+
+  /**
+   * Persist current wizard state so OS background kills do not wipe the meal plan.
+   */
+  _persistSession() {
+    try {
+      const store = typeof StorageAdapter !== 'undefined' ? StorageAdapter : localStorage;
+      store.setItem('wfd_session_state', JSON.stringify({
+        currentStep: this.currentStep,
+        groceries: this.groceries,
+        selectedCuisines: this.selectedCuisines
+      }));
+    } catch {
+      // Ignore storage errors
+    }
+  },
+
+  /**
+   * Handle Android hardware back button presses gracefully.
+   * @returns {boolean} True if handled internally; false to allow app exit.
+   */
+  handleHardwareBack() {
+    // 1. Close any open swap popover first
+    const openPopover = document.querySelector('.swap-popover, .personal-swap-popover');
+    if (openPopover) {
+      openPopover.remove();
+      return true;
+    }
+
+    // 2. Close Shopping List bottom sheet if open
+    if (typeof ShoppingList !== 'undefined' && ShoppingList.isOpen) {
+      ShoppingList.close();
+      return true;
+    }
+
+    // 3. Step back in the wizard if not on Step 1
+    if (this.currentStep > 1) {
+      this._goBack();
+      return true;
+    }
+
+    return false;
   },
 
   /* ══════════════════════════════════════════════════════════════════════
@@ -115,12 +191,14 @@ const App = {
 
     setTimeout(() => {
       this.currentStep = step;
+      this._persistSession();
       main.classList.remove('screen-exit');
       main.classList.add('screen-enter');
 
       this._renderStep(step);
       this._updateStepper();
       this._updateNavButtons();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
 
       // Remove entrance animation class after it plays
       setTimeout(() => main.classList.remove('screen-enter'), 500);
@@ -182,6 +260,7 @@ const App = {
         this.mealPlan = MealPlanner.currentPlan;
         break;
     }
+    this._persistSession();
   },
 
   /**
@@ -323,9 +402,19 @@ const App = {
   }
 };
 
+if (typeof window !== 'undefined') {
+  window.App = App;
+}
+
+if (typeof module !== 'undefined') {
+  module.exports = App;
+}
+
 /* ════════════════════════════════════════════════════════════════════════
-   Bootstrap
+   Legacy non-module fallback bootstrap (Vite boots via js/main.js)
    ════════════════════════════════════════════════════════════════════════ */
-document.addEventListener('DOMContentLoaded', () => {
-  App.init();
-});
+if (typeof window !== 'undefined' && !window.NativeBridge && typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', () => {
+    if (!App._booted) App.init();
+  });
+}

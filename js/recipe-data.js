@@ -1792,3 +1792,21 @@ const DEFAULT_PANTRY_STAPLES = [
   'oil', 'olive oil', 'butter', 'salt', 'black pepper', 'sugar', 'flour',
   'water', 'vinegar', 'garlic powder', 'onion powder'
 ];
+
+if (typeof window !== 'undefined') {
+  window.RECIPES = RECIPES;
+  window.COMMON_GROCERIES = COMMON_GROCERIES;
+  window.INGREDIENT_CATEGORIES = INGREDIENT_CATEGORIES;
+  window.SWAP_REGISTRY = SWAP_REGISTRY;
+  window.DEFAULT_PANTRY_STAPLES = DEFAULT_PANTRY_STAPLES;
+}
+
+if (typeof module !== 'undefined') {
+  module.exports = {
+    RECIPES,
+    COMMON_GROCERIES,
+    INGREDIENT_CATEGORIES,
+    SWAP_REGISTRY,
+    DEFAULT_PANTRY_STAPLES
+  };
+}

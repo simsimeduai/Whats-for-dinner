@@ -18,4 +18,15 @@
 - [ ] Verify that the top stepper header (In My Pantry, Cuisines & Diet) is completely hidden on Step 3 (Meal Plan page).
 - [ ] Verify that the GitHub Pages URL loads the app correctly.
 
+## Mobile App QA (PWA, iOS & Android)
+- [ ] Install as a PWA from mobile Safari / Chrome ("Add to Home Screen") and verify standalone launch and offline mode (Airplane Mode).
+- [ ] Safe Areas: Verify header, stepper, bottom navigation, and Shopping List FAB do not collide with iOS notch / Dynamic Island or Android gesture bar.
+- [ ] Session Persistence: Add groceries, select cuisines, generate a plan, force-quit the app, and relaunch — verify state restores cleanly.
+- [ ] Receipt Scanner: Tap **Take Receipt Photo** and **Photo Library** on device; verify permission prompts, downscaled OCR scan, and item checklist import.
+- [ ] Day Pill Bar: On Step 3, tap `Mon`–`Sun` and `All` pills to filter days smoothly on narrow screens.
+- [ ] Shopping List Bottom Sheet: Swipe down on the drag handle/header to dismiss; tap **Share List** on mobile to open native Share Sheet.
+- [ ] Calendar Export: Tap **Add to Calendar** on iOS/Android and verify native share/import of `whats-for-dinner-meal-plan.ics`.
+- [ ] Android Hardware Back Button: Verify Back closes swap popovers → closes Shopping List drawer → steps back in wizard → exits only on Step 1.
+- [ ] Offline Web Recipe Search: Turn on Airplane Mode and tap **Search Web Recipes** — verify clean offline toast while built-in recipes continue working.
+
 *Mark each item as you verify it.*

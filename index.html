@@ -2,18 +2,15 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="description" content="What's for Dinner — A smart weekly meal planner that turns your grocery list into a delicious 7-day menu based on your favorite cuisines.">
   <meta name="theme-color" content="#F3F4F6">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="What's for Dinner">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <title>What's for Dinner — Weekly Meal Planner</title>
-
-  <!-- Google Fonts: Outfit -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-
-  <!-- App Styles -->
-  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
@@ -79,20 +76,9 @@
   </footer>
 
   <!-- ═══════════════════════════════════════════════ -->
-  <!-- Tesseract.js OCR Engine (CDN)                   -->
+  <!-- App Entry Point (Vite + PWA + Capacitor)        -->
   <!-- ═══════════════════════════════════════════════ -->
-  <script src="https://unpkg.com/tesseract.js@v5.1.1/dist/tesseract.min.js"></script>
-
-  <!-- ═══════════════════════════════════════════════ -->
-  <!-- App Scripts (order matters)                     -->
-  <!-- ═══════════════════════════════════════════════ -->
-  <script src="js/recipe-data.js"></script>
-  <script src="js/ocr-engine.js"></script>
-  <script src="js/grocery-input.js"></script>
-  <script src="js/cuisine-picker.js"></script>
-  <script src="js/meal-planner.js"></script>
-  <script src="js/shopping-list.js"></script>
-  <script src="js/app.js"></script>
+  <script type="module" src="/js/main.js"></script>
 
 </body>
 </html>

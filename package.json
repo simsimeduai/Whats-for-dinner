@@ -4,19 +4,40 @@
   "description": "Premium meal planning web app with OCR and cuisine selection",
   "main": "index.html",
   "scripts": {
-    "dev": "npx serve -l 5000",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "cap:sync": "npm run build && npx cap sync",
+    "cap:ios": "npx cap open ios",
+    "cap:android": "npx cap open android",
     "test": "jest",
-    "build": "rm -rf dist && mkdir dist && cp index.html dist/ && cp -r css dist/ && cp -r js dist/ && cp -r .github dist/.github || true",
     "deploy": "npm run build && npx gh-pages -d dist"
   },
   "author": "",
   "license": "MIT",
   "devDependencies": {
+    "@capacitor/android": "^8.6.3",
+    "@capacitor/cli": "^8.6.3",
+    "@capacitor/ios": "^8.6.3",
     "gh-pages": "^5.0.0",
     "jest": "^29.0.0",
-    "jsdom": "^22.0.0"
+    "jsdom": "^22.0.0",
+    "vite": "^8.3.8",
+    "vite-plugin-pwa": "^2.0.0"
   },
   "dependencies": {
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/camera": "^8.2.6",
+    "@capacitor/core": "^8.6.3",
+    "@capacitor/filesystem": "^8.1.5",
+    "@capacitor/haptics": "^8.0.2",
+    "@capacitor/keyboard": "^8.0.6",
+    "@capacitor/network": "^8.0.1",
+    "@capacitor/preferences": "^8.0.1",
+    "@capacitor/share": "^8.0.3",
+    "@capacitor/splash-screen": "^8.0.2",
+    "@capacitor/status-bar": "^8.0.4",
+    "@fontsource/outfit": "^5.3.0",
     "tesseract.js": "^7.0.0"
   }
 }

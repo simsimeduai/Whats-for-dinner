@@ -182,7 +182,7 @@ const ShoppingList = {
     this._panel.setAttribute('aria-label', 'Shopping List');
     this._panel.innerHTML = `
       <div class="panel-drag-handle" id="panel-drag-handle"></div>
-      <div class="panel-header">
+      <div class="panel-header" id="panel-header">
         <div class="panel-title-row">
           <span class="panel-title">🛒 Shopping List</span>
           <span class="panel-count-badge" id="panel-count-badge">0 items</span>
@@ -193,13 +193,13 @@ const ShoppingList = {
         <!-- List content rendered dynamically -->
       </div>
       <div class="panel-actions">
-        <button class="btn btn-secondary btn-panel" id="btn-print-list" aria-label="Print shopping list">
+        <button class="btn btn-secondary btn-panel" id="btn-print-list" aria-label="Share or print shopping list">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="6 9 6 2 18 2 18 9"></polyline>
             <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
             <rect x="6" y="14" width="12" height="8"></rect>
           </svg>
-          Print List
+          ${typeof NativeBridge !== 'undefined' && NativeBridge.isNative ? 'Share List' : 'Print List'}
         </button>
         <button class="btn btn-instacart btn-panel" id="btn-instacart" aria-label="Order via Instacart (coming soon)" disabled>
           🥕 Order via Instacart
@@ -215,9 +215,48 @@ const ShoppingList = {
       App._showToast('Instacart integration coming soon! 🥕', 'info');
     });
 
+    // Swipe-down-to-dismiss touch gesture on drag handle & header
+    this._bindSwipeToDismiss();
+
     // Close on Escape
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && this.isOpen) this.close();
+    });
+  },
+
+  /** Bind mobile touch swipe-down-to-dismiss on the shopping list sheet. */
+  _bindSwipeToDismiss() {
+    const handle = this._panel?.querySelector('#panel-drag-handle');
+    const header = this._panel?.querySelector('#panel-header');
+    const targets = [handle, header].filter(Boolean);
+    let startY = 0;
+    let deltaY = 0;
+    let dragging = false;
+
+    targets.forEach(el => {
+      el.addEventListener('touchstart', (e) => {
+        if (!e.touches.length) return;
+        startY = e.touches[0].clientY;
+        deltaY = 0;
+        dragging = true;
+        this._panel.style.transition = 'none';
+      }, { passive: true });
+
+      el.addEventListener('touchmove', (e) => {
+        if (!dragging || !e.touches.length) return;
+        deltaY = Math.max(0, e.touches[0].clientY - startY);
+        this._panel.style.transform = `translateY(${deltaY}px)`;
+      }, { passive: true });
+
+      el.addEventListener('touchend', () => {
+        if (!dragging) return;
+        dragging = false;
+        this._panel.style.transition = '';
+        this._panel.style.transform = '';
+        if (deltaY > 90) {
+          this.close();
+        }
+      });
     });
   },
 
@@ -349,11 +388,8 @@ const ShoppingList = {
     }
   },
 
-  /** Open print dialog with a clean list. */
-  _printList() {
-    const printArea = document.getElementById('print-shopping-list');
-    if (printArea) printArea.remove();
-
+  /** Open native Share Sheet on mobile or print dialog on desktop with a clean list. */
+  async _printList() {
     const SECTION_ORDER = ['Proteins', 'Produce', 'Dairy & Eggs', 'Pantry', 'Spices & Seasonings', 'Other'];
     const grouped = {};
     SECTION_ORDER.forEach(s => { grouped[s] = []; });
@@ -361,6 +397,29 @@ const ShoppingList = {
       const cat = SECTION_ORDER.includes(item.category) ? item.category : 'Other';
       grouped[cat].push(item);
     });
+
+    // Prefer native Share Sheet on Capacitor mobile devices
+    if (typeof NativeBridge !== 'undefined' && NativeBridge.isNative) {
+      const lines = ["🛒 Shopping List — What's for Dinner", ''];
+      SECTION_ORDER.forEach(section => {
+        const sectionItems = grouped[section];
+        if (sectionItems.length === 0) return;
+        lines.push(`${section}:`);
+        sectionItems.forEach(item => {
+          lines.push(`  ${item.checked ? '☑' : '☐'} ${item.name}`);
+        });
+        lines.push('');
+      });
+      const shared = await NativeBridge.shareText({
+        title: "Shopping List — What's for Dinner",
+        text: lines.join('\n').trim(),
+        dialogTitle: 'Share Shopping List'
+      });
+      if (shared) return;
+    }
+
+    const printArea = document.getElementById('print-shopping-list');
+    if (printArea) printArea.remove();
 
     let html = `<div id="print-shopping-list" style="display:none">`;
     html += `<h2>🛒 Shopping List — What's for Dinner</h2>`;
@@ -406,10 +465,11 @@ const ShoppingList = {
     return 'Other';
   },
 
-  /** Load shopping list from localStorage. */
+  /** Load shopping list from persistent storage. */
   _loadFromStorage() {
     try {
-      const stored = localStorage.getItem('wfd_shopping_list');
+      const store = typeof StorageAdapter !== 'undefined' ? StorageAdapter : localStorage;
+      const stored = store.getItem('wfd_shopping_list');
       this.items = stored ? JSON.parse(stored) : [];
       // Migrate old format if needed
       this.items = this.items.map(item => ({
@@ -423,12 +483,21 @@ const ShoppingList = {
     }
   },
 
-  /** Save shopping list to localStorage (compact format). */
+  /** Save shopping list to persistent storage (compact format). */
   _saveToStorage() {
     try {
-      localStorage.setItem('wfd_shopping_list', JSON.stringify(this.items));
+      const store = typeof StorageAdapter !== 'undefined' ? StorageAdapter : localStorage;
+      store.setItem('wfd_shopping_list', JSON.stringify(this.items));
     } catch (e) {
       console.warn('Could not save shopping list:', e);
     }
   }
 };
+
+if (typeof window !== 'undefined') {
+  window.ShoppingList = ShoppingList;
+}
+
+if (typeof module !== 'undefined') {
+  module.exports = ShoppingList;
+}

@@ -77,7 +77,8 @@ const MealPlanner = {
 
     let customRecipes = [];
     try {
-      const stored = localStorage.getItem('wfd_custom_recipes');
+      const store = typeof StorageAdapter !== 'undefined' ? StorageAdapter : localStorage;
+      const stored = store.getItem('wfd_custom_recipes');
       if (stored) customRecipes = JSON.parse(stored);
     } catch (e) {
       customRecipes = [];
@@ -274,6 +275,14 @@ const MealPlanner = {
   async searchWebRecipes() {
     if (!this.groceries || this.groceries.length === 0) return 0;
 
+    // Gracefully guard against offline usage on mobile devices
+    const online = typeof NativeBridge !== 'undefined'
+      ? await NativeBridge.isOnline()
+      : (typeof navigator !== 'undefined' ? navigator.onLine : true);
+    if (!online) {
+      throw new Error('You are currently offline. Built-in recipes are still available!');
+    }
+
     const staples = new Set(['salt', 'pepper', 'oil', 'water', 'butter', 'flour', 'sugar', 'garlic', 'onion', 'ginger', 'oil']);
     const searchIngredients = this.groceries
       .filter(g => !staples.has(g.toLowerCase()))
@@ -285,7 +294,8 @@ const MealPlanner = {
 
     let customRecipes = [];
     try {
-      const stored = localStorage.getItem('wfd_custom_recipes');
+      const store = typeof StorageAdapter !== 'undefined' ? StorageAdapter : localStorage;
+      const stored = store.getItem('wfd_custom_recipes');
       if (stored) customRecipes = JSON.parse(stored);
     } catch {
       customRecipes = [];
@@ -387,7 +397,8 @@ const MealPlanner = {
 
     if (importedRecipes.length > 0) {
       customRecipes.push(...importedRecipes);
-      localStorage.setItem('wfd_custom_recipes', JSON.stringify(customRecipes));
+      const store = typeof StorageAdapter !== 'undefined' ? StorageAdapter : localStorage;
+      store.setItem('wfd_custom_recipes', JSON.stringify(customRecipes));
     }
 
     return importedRecipes.length;
@@ -416,29 +427,37 @@ const MealPlanner = {
   },
 
   /* ══════════════════════════════════════════════════════════════════════
-     Swap Memory — localStorage
+     Swap Memory — Persistent Storage
      ══════════════════════════════════════════════════════════════════════ */
 
   _loadSwapMemory() {
     try {
-      const s = localStorage.getItem('wfd_swaps');
+      const store = typeof StorageAdapter !== 'undefined' ? StorageAdapter : localStorage;
+      const s = store.getItem('wfd_swaps');
       this.swapMemory = s ? JSON.parse(s) : {};
     } catch { this.swapMemory = {}; }
   },
 
   _saveSwapMemory() {
-    try { localStorage.setItem('wfd_swaps', JSON.stringify(this.swapMemory)); } catch {}
+    try {
+      const store = typeof StorageAdapter !== 'undefined' ? StorageAdapter : localStorage;
+      store.setItem('wfd_swaps', JSON.stringify(this.swapMemory));
+    } catch {}
   },
 
   _loadRecipeSubs() {
     try {
-      const s = localStorage.getItem('wfd_recipe_subs');
+      const store = typeof StorageAdapter !== 'undefined' ? StorageAdapter : localStorage;
+      const s = store.getItem('wfd_recipe_subs');
       this.recipeSubs = s ? JSON.parse(s) : {};
     } catch { this.recipeSubs = {}; }
   },
 
   _saveRecipeSubs() {
-    try { localStorage.setItem('wfd_recipe_subs', JSON.stringify(this.recipeSubs)); } catch {}
+    try {
+      const store = typeof StorageAdapter !== 'undefined' ? StorageAdapter : localStorage;
+      store.setItem('wfd_recipe_subs', JSON.stringify(this.recipeSubs));
+    } catch {}
   },
 
   /* ══════════════════════════════════════════════════════════════════════
@@ -471,6 +490,9 @@ const MealPlanner = {
       <p class="screen-subtitle">Tap any meal to see ingredients, swaps, and add to your shopping list</p>
     `;
     container.appendChild(header);
+
+    const isNative = typeof NativeBridge !== 'undefined' && NativeBridge.isNative;
+    const shareOrPrintLabel = isNative ? 'Share Plan' : 'Print';
 
     // ── Action Bar ──
     const actionBar = document.createElement('div');
@@ -505,18 +527,31 @@ const MealPlanner = {
             </svg>
             Regenerate
           </button>
-          <button class="btn btn-secondary btn-sm" id="btn-print" aria-label="Print meal plan">
+          <button class="btn btn-secondary btn-sm" id="btn-print" aria-label="${shareOrPrintLabel} meal plan">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="6 9 6 2 18 2 18 9"></polyline>
               <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
               <rect x="6" y="14" width="12" height="8"></rect>
             </svg>
-            Print
+            ${shareOrPrintLabel}
           </button>
         </div>
       </div>
     `;
     container.appendChild(actionBar);
+
+    // ── Mobile Day Selector Pill Bar ──
+    const dayPillBar = document.createElement('div');
+    dayPillBar.className = 'day-pill-bar';
+    dayPillBar.setAttribute('role', 'tablist');
+    dayPillBar.setAttribute('aria-label', 'Filter by day of week');
+    dayPillBar.innerHTML = `
+      <button type="button" class="day-pill active" data-day="all" role="tab" aria-selected="true">All</button>
+      ${this.DAYS.map((day, idx) =>
+        `<button type="button" class="day-pill" data-day="${day.toLowerCase()}" role="tab" aria-selected="false">${this.DAYS_SHORT[idx]}</button>`
+      ).join('')}
+    `;
+    container.appendChild(dayPillBar);
 
     // ── Day Accordions ──
     const planList = document.createElement('div');
@@ -530,6 +565,29 @@ const MealPlanner = {
     });
 
     container.appendChild(planList);
+
+    // Day pill filtering logic
+    dayPillBar.querySelectorAll('.day-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        const selectedDay = pill.dataset.day;
+        dayPillBar.querySelectorAll('.day-pill').forEach(p => {
+          const isActive = p === pill;
+          p.classList.toggle('active', isActive);
+          p.setAttribute('aria-selected', String(isActive));
+        });
+        planList.querySelectorAll('.day-block').forEach(block => {
+          const isMatch = selectedDay === 'all' || block.id === `day-block-${selectedDay}`;
+          block.classList.toggle('hidden', !isMatch);
+          if (selectedDay !== 'all' && isMatch) {
+            const body = block.querySelector('.day-block-body');
+            const hdr = block.querySelector('.day-block-header');
+            body?.classList.add('open');
+            hdr?.setAttribute('aria-expanded', 'true');
+          }
+        });
+        if (typeof NativeBridge !== 'undefined') NativeBridge.haptic('light');
+      });
+    });
 
     // ── Legend ──
     const legend = document.createElement('div');
@@ -569,13 +627,14 @@ const MealPlanner = {
         }
       } catch (err) {
         console.error(err);
-        if (typeof App !== 'undefined') App._showToast(`⚠️ Error fetching recipes: ${err.message}`, 'error');
+        if (typeof App !== 'undefined') App._showToast(`⚠️ ${err.message}`, 'error');
         btn.disabled = false;
         btn.innerHTML = `🌐 Search Web Recipes`;
       }
     });
 
     document.getElementById('btn-regenerate')?.addEventListener('click', () => {
+      if (typeof NativeBridge !== 'undefined') NativeBridge.haptic('medium');
       const icon = document.querySelector('.regenerate-icon');
       if (icon) {
         icon.classList.add('spinning');
@@ -584,7 +643,37 @@ const MealPlanner = {
       setTimeout(() => this.render(container, groceries, selectedCuisines, profiles, pantryStaples), 300);
     });
 
-    document.getElementById('btn-print')?.addEventListener('click', () => window.print());
+    document.getElementById('btn-print')?.addEventListener('click', async () => {
+      if (isNative && typeof NativeBridge !== 'undefined') {
+        const shared = await NativeBridge.shareText({
+          title: "What's for Dinner — Weekly Meal Plan",
+          text: this._formatPlanAsText(),
+          dialogTitle: 'Share Weekly Meal Plan'
+        });
+        if (shared) return;
+      }
+      window.print();
+    });
+  },
+
+  /**
+   * Format the current weekly plan into readable plain text for mobile sharing.
+   * @private
+   */
+  _formatPlanAsText() {
+    if (!this.currentPlan) return '';
+    const lines = ["🍽️ What's for Dinner — Weekly Meal Plan", ''];
+    this.DAYS.forEach(day => {
+      const dayPlan = this.currentPlan[day.toLowerCase()];
+      if (!dayPlan) return;
+      lines.push(`📅 ${day}`);
+      this.MEAL_TYPES.forEach(m => {
+        const r = dayPlan[m.id];
+        if (r) lines.push(`  ${m.icon} ${m.label}: ${r.name} (${r.cuisine})`);
+      });
+      lines.push('');
+    });
+    return lines.join('\n').trim();
   },
 
   /* ══════════════════════════════════════════════════════════════════════
@@ -1318,22 +1407,35 @@ const MealPlanner = {
     icsContent.push('END:VCALENDAR');
     const icsString = icsContent.join('\r\n');
 
-    const blob = new Blob([icsString], { type: 'text/calendar;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.setAttribute('download', 'whats-for-dinner-meal-plan.ics');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const triggerWebDownload = () => {
+      const blob = new Blob([icsString], { type: 'text/calendar;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.setAttribute('download', 'whats-for-dinner-meal-plan.ics');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+
+    if (typeof NativeBridge !== 'undefined' && NativeBridge.isNative) {
+      NativeBridge.exportCalendarFile(icsString, 'whats-for-dinner-meal-plan.ics')
+        .then((exported) => {
+          if (!exported) triggerWebDownload();
+        })
+        .catch(() => triggerWebDownload());
+    } else {
+      triggerWebDownload();
+    }
   },
 
   /**
-   * Load custom personal swaps from localStorage.
+   * Load custom personal swaps from persistent storage.
    * @private
    */
   _loadPersonalSwaps() {
     try {
-      const s = localStorage.getItem('wfd_personal_swaps');
+      const store = typeof StorageAdapter !== 'undefined' ? StorageAdapter : localStorage;
+      const s = store.getItem('wfd_personal_swaps');
       this.personalSwaps = s ? JSON.parse(s) : {};
     } catch (e) {
       this.personalSwaps = {};
@@ -1341,14 +1443,23 @@ const MealPlanner = {
   },
 
   /**
-   * Save custom personal swaps to localStorage.
+   * Save custom personal swaps to persistent storage.
    * @private
    */
   _savePersonalSwaps() {
     try {
-      localStorage.setItem('wfd_personal_swaps', JSON.stringify(this.personalSwaps));
+      const store = typeof StorageAdapter !== 'undefined' ? StorageAdapter : localStorage;
+      store.setItem('wfd_personal_swaps', JSON.stringify(this.personalSwaps));
     } catch (e) {
       console.warn('Could not save personal swaps:', e);
     }
   }
 };
+
+if (typeof window !== 'undefined') {
+  window.MealPlanner = MealPlanner;
+}
+
+if (typeof module !== 'undefined') {
+  module.exports = MealPlanner;
+}
