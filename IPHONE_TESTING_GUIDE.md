@@ -1,12 +1,30 @@
 # How to Test "What's for Dinner" on Your iPhone
 
-You can test the mobile app on your iPhone in **two ways**. If you have never built an iPhone app before, start with **Option 1** (2 minutes, no Mac needed) or follow **Option 2** for the full native iOS app with Xcode.
+## Option 1: Expo Go (Fastest Native iPhone Test — Works on Mac, Windows, or Linux!)
+
+No Xcode or Apple Developer account required.
+
+1. On your **iPhone**, install the free **Expo Go** app from the App Store.
+2. Make sure your **notebook** and **iPhone** are on the **same Wi-Fi network**.
+3. On your **notebook** terminal, pull the latest `mobile-iphone-app` branch and start Expo:
+   ```bash
+   git fetch
+   git checkout mobile-iphone-app
+   git pull
+   cd mobile-expo
+   npm install
+   npx expo start
+   ```
+   *(Or from the repo root: `npm run expo:install && npm run expo`.)*
+4. A **QR code** will appear in your terminal.
+5. Open your **iPhone Camera app** and point it at the QR code → tap the **Open in Expo Go** banner!
+   *(If your Wi-Fi blocks local device connections, run `npx expo start --tunnel` instead.)*
 
 ---
 
-## Option 1: Fastest Way (2 Minutes — No Mac or Xcode Needed)
+## Option 2: Install as a Mobile PWA (2 Minutes — No Notebook Required After Deploy)
 
-Your app is now a **Progressive Web App (PWA)** that installs onto your iPhone Home Screen and works offline.
+Your app is also a **Progressive Web App (PWA)** that installs onto your iPhone Home Screen and works offline.
 
 1. Once this branch is merged to `main`, GitHub Pages automatically builds and publishes your app to:
    `https://simsimeduai.github.io/Whats-for-dinner/`
