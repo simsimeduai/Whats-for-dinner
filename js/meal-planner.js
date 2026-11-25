@@ -25,9 +25,6 @@ const MealPlanner = {
   /** @type {Object} Remembered ingredient swaps — loaded from localStorage */
   swapMemory: {},
 
-  /** @type {Object} Remembered recipe-level protein subs */
-  recipeSubs: {},
-
   /** @type {Object} Custom serving protein swaps per person: { [recipeId]: { [personName]: ingredientName } } */
   personalSwaps: {},
 
@@ -44,9 +41,47 @@ const MealPlanner = {
     { id: 'dinner',    label: 'Dinner',    icon: '🌙', color: 'hsl(270, 65%, 55%)' }
   ],
 
+  /** Common allergen group expansions for safer hard-filtering */
+  ALLERGEN_GROUPS: {
+    'dairy': ['milk', 'cream', 'heavy cream', 'butter', 'cheese', 'mozzarella', 'parmesan', 'ricotta', 'feta', 'yogurt', 'paneer', 'ghee'],
+    'shellfish': ['shrimp', 'prawn', 'crab', 'lobster', 'clam', 'mussel', 'oyster', 'scallop'],
+    'tree nuts': ['almond', 'walnut', 'cashew', 'pecan', 'pistachio', 'hazelnut', 'pine nut', 'macadamia'],
+    'nuts': ['peanut', 'almond', 'walnut', 'cashew', 'pecan', 'pistachio', 'hazelnut', 'pine nut'],
+    'gluten': ['flour', 'bread', 'pasta', 'noodle', 'tortilla', 'pita bread', 'bread crumb', 'soy sauce', 'wonton wrapper']
+  },
+
   /* ══════════════════════════════════════════════════════════════════════
      Plan Generation
      ══════════════════════════════════════════════════════════════════════ */
+
+  /**
+   * Check whether an ingredient matches any user allergy (substring, normalized, or allergen group).
+   * @private
+   * @param {string} ingredient
+   * @param {Set<string>} allergies
+   * @returns {boolean}
+   */
+  _matchesAllergy(ingredient, allergies) {
+    const ingLower = ingredient.toLowerCase().trim();
+    const normIng = this._normalizeIngredient(ingLower);
+
+    for (const allergy of allergies) {
+      const normAllergy = this._normalizeIngredient(allergy);
+      if (
+        ingLower === allergy ||
+        ingLower.includes(allergy) ||
+        (normAllergy && (normIng === normAllergy || normIng.includes(normAllergy)))
+      ) {
+        return true;
+      }
+
+      const groupMembers = this.ALLERGEN_GROUPS[allergy];
+      if (groupMembers && groupMembers.some(m => ingLower === m || ingLower.includes(m))) {
+        return true;
+      }
+    }
+    return false;
+  },
 
   /**
    * Generate a weekly meal plan filtered by dietary profiles.
@@ -54,26 +89,22 @@ const MealPlanner = {
    * @param {string[]} selectedCuisines - Selected cuisine IDs
    * @param {Array}    profiles - Household dietary profiles
    * @param {string[]} pantryStaples - User's pantry staples
+   * @param {Object}   [options] - Optional flags ({ shuffle: boolean })
    * @returns {Object} Plan: { monday: { breakfast: Recipe, ... }, ... }
    */
-  generatePlan(groceries, selectedCuisines, profiles = [], pantryStaples = []) {
+  generatePlan(groceries, selectedCuisines, profiles = [], pantryStaples = [], options = {}) {
     this.groceries      = groceries.map(g => g.toLowerCase().trim());
     this.pantryStaples  = pantryStaples.map(s => s.toLowerCase().trim());
     this.cuisines       = selectedCuisines;
     this.profiles       = profiles;
 
-    // Load swap memory, recipe subs, & personal swaps from localStorage
+    // Load swap memory & personal swaps from localStorage
     this._loadSwapMemory();
-    this._loadRecipeSubs();
     this._loadPersonalSwaps();
 
     // Merge all allergies across profiles (hard filter)
     const allAllergies = new Set();
-    profiles.forEach(p => p.allergies?.forEach(a => allAllergies.add(a.toLowerCase())));
-
-    // Merge all dietary flags across profiles (soft flag for substitution suggestions)
-    const allFlags = new Set();
-    profiles.forEach(p => p.dietaryFlags?.forEach(f => allFlags.add(f)));
+    profiles.forEach(p => p.allergies?.forEach(a => allAllergies.add(a.toLowerCase().trim())));
 
     let customRecipes = [];
     try {
@@ -88,15 +119,17 @@ const MealPlanner = {
     // Filter by cuisine
     let filteredRecipes = allRecipes.filter(r => cuisineNames.includes(r.cuisine));
 
-    // Hard filter: remove recipes containing any allergy ingredient
+    // Hard filter: remove recipes containing any allergy ingredient (substring, normalized, or allergen group)
     if (allAllergies.size > 0) {
       filteredRecipes = filteredRecipes.filter(r =>
-        !r.ingredients.some(i => allAllergies.has(i.toLowerCase()))
+        !(r.ingredients || []).some(i => this._matchesAllergy(i, allAllergies))
       );
     }
 
     // Build combined "have" set: groceries + pantry staples
     const haveNormalized = new Set([...this.groceries, ...this.pantryStaples].map(i => this._normalizeIngredient(i)));
+    const stapleNormalized = new Set(this.pantryStaples.map(s => this._normalizeIngredient(s)));
+    const groceryNormalized = new Set(this.groceries.map(g => this._normalizeIngredient(g)));
 
     // Score and annotate each recipe
     const scoredRecipes = filteredRecipes.map(recipe => {
@@ -106,25 +139,29 @@ const MealPlanner = {
       // Pantry staples used in this recipe (informational)
       const pantryUsed = ingredients.filter(i => {
         const norm = this._normalizeIngredient(i);
-        const isStaple = this.pantryStaples.map(s => this._normalizeIngredient(s)).includes(norm);
-        const isGrocery = this.groceries.map(g => this._normalizeIngredient(g)).includes(norm);
-        return isStaple && !isGrocery;
+        return stapleNormalized.has(norm) && !groceryNormalized.has(norm);
       });
-
-      // Dietary conflict: any ingredient is a protein with a matching swap?
-      const dietarySwap = this._findDietarySwap(recipe, allFlags);
 
       return {
         ...recipe,
         score: matched.length / Math.max(ingredients.length, 1),
         matchedIngredients: matched,
         missingIngredients: missing,
-        pantryIngredients: pantryUsed,
-        dietarySwap // { protein, swapTo, forFlag } or null
+        pantryIngredients: pantryUsed
       };
     });
 
-    scoredRecipes.sort((a, b) => b.score - a.score);
+    const shuffle = Boolean(options && options.shuffle);
+    if (shuffle) {
+      // Perturb scores so Regenerate produces fresh varied plans while still preferring good matches
+      scoredRecipes.forEach(r => {
+        r._sortKey = r.score + (Math.random() * 0.45);
+      });
+      scoredRecipes.sort((a, b) => b._sortKey - a._sortKey);
+      scoredRecipes.forEach(r => { delete r._sortKey; });
+    } else {
+      scoredRecipes.sort((a, b) => b.score - a.score);
+    }
 
     const byMealType = {
       breakfast: scoredRecipes.filter(r => r.mealType.includes('breakfast')),
@@ -134,6 +171,7 @@ const MealPlanner = {
 
     const plan = {};
     const usedIds = new Set();
+    const cuisineOffset = shuffle ? Math.floor(Math.random() * Math.max(cuisineNames.length, 1)) : 0;
 
     this.DAYS.forEach((day, dayIndex) => {
       const dayKey = day.toLowerCase();
@@ -141,11 +179,22 @@ const MealPlanner = {
 
       this.MEAL_TYPES.forEach(({ id: mealType }) => {
         const candidates = byMealType[mealType].filter(r => !usedIds.has(r.id));
-        const targetCuisine = this._getCuisineForSlot(dayIndex, mealType, plan, cuisineNames);
+        const targetCuisine = this._getCuisineForSlot(dayIndex, mealType, plan, cuisineNames, cuisineOffset);
         let selected = null;
 
-        if (targetCuisine) selected = candidates.find(r => r.cuisine === targetCuisine);
-        if (!selected && candidates.length > 0) selected = candidates[0];
+        if (targetCuisine) {
+          const matchingCuisine = candidates.filter(r => r.cuisine === targetCuisine);
+          if (matchingCuisine.length > 0) {
+            selected = shuffle
+              ? matchingCuisine[Math.floor(Math.random() * Math.min(matchingCuisine.length, 3))]
+              : matchingCuisine[0];
+          }
+        }
+        if (!selected && candidates.length > 0) {
+          selected = shuffle
+            ? candidates[Math.floor(Math.random() * Math.min(candidates.length, 3))]
+            : candidates[0];
+        }
         if (!selected) {
           const all = byMealType[mealType];
           if (all.length > 0) selected = all[Math.floor(Math.random() * all.length)];
@@ -159,7 +208,7 @@ const MealPlanner = {
             ingredients: [], prepTime: 30, difficulty: 'easy',
             description: 'A delicious meal with your available ingredients',
             score: 0, matchedIngredients: [], missingIngredients: [],
-            pantryIngredients: [], dietarySwap: null
+            pantryIngredients: []
           };
         }
 
@@ -170,29 +219,6 @@ const MealPlanner = {
 
     this.currentPlan = plan;
     return plan;
-  },
-
-  /**
-   * Find a dietary-profile-driven protein substitution for a recipe.
-   * @private
-   */
-  _findDietarySwap(recipe, allFlags) {
-    if (!allFlags.size) return null;
-    const swapReg = typeof SWAP_REGISTRY !== 'undefined' ? SWAP_REGISTRY : {};
-
-    for (const ingredient of (recipe.ingredients || [])) {
-      const key = ingredient.toLowerCase();
-      const entry = swapReg[key];
-      if (entry && typeof entry === 'object' && !Array.isArray(entry)) {
-        // Protein-level swap map
-        for (const flag of allFlags) {
-          if (entry[flag]) {
-            return { protein: key, swapTo: entry[flag], forFlag: flag };
-          }
-        }
-      }
-    }
-    return null;
   },
 
   /**
@@ -405,13 +431,13 @@ const MealPlanner = {
   },
 
   /** @private Distribute cuisines evenly across day/meal slots */
-  _getCuisineForSlot(dayIndex, mealType, currentPlan, cuisineNames) {
+  _getCuisineForSlot(dayIndex, mealType, currentPlan, cuisineNames, offset = 0) {
     if (!cuisineNames.length) return null;
     const dayKey = this.DAYS[dayIndex].toLowerCase();
     const todaysCuisines = Object.values(currentPlan[dayKey] || {}).map(r => r?.cuisine).filter(Boolean);
     const unused = cuisineNames.filter(c => !todaysCuisines.includes(c));
     const pool = unused.length > 0 ? unused : cuisineNames;
-    const slotIndex = dayIndex * 3 + this.MEAL_TYPES.findIndex(m => m.id === mealType);
+    const slotIndex = dayIndex * 3 + this.MEAL_TYPES.findIndex(m => m.id === mealType) + offset;
     return pool[slotIndex % pool.length];
   },
 
@@ -430,17 +456,6 @@ const MealPlanner = {
     try { localStorage.setItem('wfd_swaps', JSON.stringify(this.swapMemory)); } catch {}
   },
 
-  _loadRecipeSubs() {
-    try {
-      const s = localStorage.getItem('wfd_recipe_subs');
-      this.recipeSubs = s ? JSON.parse(s) : {};
-    } catch { this.recipeSubs = {}; }
-  },
-
-  _saveRecipeSubs() {
-    try { localStorage.setItem('wfd_recipe_subs', JSON.stringify(this.recipeSubs)); } catch {}
-  },
-
   /* ══════════════════════════════════════════════════════════════════════
      Rendering — Main
      ══════════════════════════════════════════════════════════════════════ */
@@ -452,11 +467,12 @@ const MealPlanner = {
    * @param {string[]} selectedCuisines
    * @param {Array}    profiles
    * @param {string[]} pantryStaples
+   * @param {Object}   [options]
    */
-  render(container, groceries, selectedCuisines, profiles = [], pantryStaples = []) {
+  render(container, groceries, selectedCuisines, profiles = [], pantryStaples = [], options = {}) {
     container.innerHTML = '';
 
-    const plan = this.generatePlan(groceries, selectedCuisines, profiles, pantryStaples);
+    const plan = this.generatePlan(groceries, selectedCuisines, profiles, pantryStaples, options);
 
     // Show/hide shopping FAB
     if (typeof ShoppingList !== 'undefined') {
@@ -581,7 +597,7 @@ const MealPlanner = {
         icon.classList.add('spinning');
         setTimeout(() => icon.classList.remove('spinning'), 600);
       }
-      setTimeout(() => this.render(container, groceries, selectedCuisines, profiles, pantryStaples), 300);
+      setTimeout(() => this.render(container, groceries, selectedCuisines, profiles, pantryStaples, { shuffle: true }), 300);
     });
 
     document.getElementById('btn-print')?.addEventListener('click', () => window.print());
@@ -600,10 +616,11 @@ const MealPlanner = {
     block.className = 'day-block';
     block.id = `day-block-${day.toLowerCase()}`;
 
-    // Count total missing across the day
+    // Count total swap-adjusted missing ingredients across the day
     let totalMissing = 0;
     Object.values(dayPlan).forEach(recipe => {
-      totalMissing += (recipe.missingIngredients || []).length;
+      const { missing } = this._getRecipeServingsAndIngredients(recipe);
+      totalMissing += missing.length;
     });
 
     const missingBadge = totalMissing > 0
@@ -875,6 +892,9 @@ const MealPlanner = {
         badge.textContent = '✅ All ingredients available';
       }
     }
+
+    // Keep enclosing day-block missing count in sync after protein/ingredient swaps
+    this._updateDayMissingBadge(card);
 
     // ── Render Family Servings ──
     this._renderFamilyServings(recipe, servings, card);
@@ -1154,6 +1174,67 @@ const MealPlanner = {
   },
 
   /**
+   * Resolve swap options for an ingredient from SWAP_REGISTRY.
+   * Supports both array entries (ingredient swaps) and object entries (protein swaps).
+   * @private
+   * @param {string} ingredient
+   * @returns {string[]}
+   */
+  _getSwapOptions(ingredient) {
+    const swapReg = typeof SWAP_REGISTRY !== 'undefined' ? SWAP_REGISTRY : {};
+    const key = ingredient.toLowerCase().trim();
+    const raw = swapReg[key];
+    if (!raw) return [];
+    if (Array.isArray(raw)) {
+      return raw.filter(opt => opt.toLowerCase() !== key);
+    }
+    if (typeof raw === 'object') {
+      const unique = [];
+      const seen = new Set([key]);
+      Object.values(raw).forEach(val => {
+        if (typeof val === 'string') {
+          const lower = val.toLowerCase().trim();
+          if (lower && !seen.has(lower)) {
+            seen.add(lower);
+            unique.push(val);
+          }
+        }
+      });
+      return unique;
+    }
+    return [];
+  },
+
+  /**
+   * Recompute and update the enclosing day-block's missing count badge.
+   * @private
+   */
+  _updateDayMissingBadge(cardEl) {
+    const dayBlock = cardEl?.closest?.('.day-block');
+    if (!dayBlock || !this.currentPlan) return;
+    const dayKey = dayBlock.id.replace('day-block-', '');
+    const dayPlan = this.currentPlan[dayKey];
+    if (!dayPlan) return;
+
+    let totalMissing = 0;
+    Object.values(dayPlan).forEach(recipe => {
+      const { missing } = this._getRecipeServingsAndIngredients(recipe);
+      totalMissing += missing.length;
+    });
+
+    const badge = dayBlock.querySelector('.day-missing-badge');
+    if (badge) {
+      if (totalMissing > 0) {
+        badge.className = 'day-missing-badge';
+        badge.textContent = `${totalMissing} missing`;
+      } else {
+        badge.className = 'day-missing-badge none';
+        badge.textContent = '✓ All covered';
+      }
+    }
+  },
+
+  /**
    * Open a swap popover for a missing ingredient.
    * @private
    */
@@ -1161,21 +1242,20 @@ const MealPlanner = {
     // Close any existing popovers
     document.querySelectorAll('.swap-popover').forEach(p => p.remove());
 
-    const swapReg = typeof SWAP_REGISTRY !== 'undefined' ? SWAP_REGISTRY : {};
-    const options = swapReg[ingredient.toLowerCase()];
+    const options = this._getSwapOptions(ingredient);
 
-    if (!options || !Array.isArray(options) || options.length === 0) {
+    if (options.length === 0) {
       if (typeof App !== 'undefined') App._showToast(`No known substitutes for "${ingredient}"`, 'info');
       return;
     }
 
-    const haveSet = new Set([...this.groceries, ...this.pantryStaples]);
+    const haveSet = new Set([...this.groceries, ...this.pantryStaples].map(i => this._normalizeIngredient(i)));
 
     const popover = document.createElement('div');
     popover.className = 'swap-popover';
 
     options.forEach(opt => {
-      const inPantry = haveSet.has(opt.toLowerCase());
+      const inPantry = haveSet.has(this._normalizeIngredient(opt));
       const row = document.createElement('div');
       row.className = 'swap-option-row';
 
@@ -1244,11 +1324,11 @@ const MealPlanner = {
   },
 
   /**
-   * Generate and download an iCalendar (.ics) file for the generated meal plan.
-   * @private
+   * Build the iCalendar (.ics) string for the current meal plan.
+   * @returns {string}
    */
-  _downloadCalendarICS() {
-    if (!this.currentPlan) return;
+  _buildCalendarICS() {
+    if (!this.currentPlan) return '';
 
     const formatICSDate = (date) => {
       return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
@@ -1293,9 +1373,10 @@ const MealPlanner = {
 
         const summary = `${mealMeta.icon} ${mealMeta.label}: ${recipe.name}`;
         
-        const matched = (recipe.matchedIngredients || []).join(', ');
-        const missing = (recipe.missingIngredients || []).join(', ');
-        const description = `Cuisine: ${recipe.cuisine}\\nPrep Time: ${recipe.prepTime} mins\\n\\nIngredients matched: ${matched || 'None'}\\nIngredients missing: ${missing || 'None'}\\n\\n${recipe.description || ''}`
+        const { matched: matchedList, missing: missingList } = this._getRecipeServingsAndIngredients(recipe);
+        const matched = matchedList.join(', ');
+        const missing = missingList.join(', ');
+        const description = `Cuisine: ${recipe.cuisine}\nPrep Time: ${recipe.prepTime} mins\n\nIngredients matched: ${matched || 'None'}\nIngredients missing: ${missing || 'None'}\n\n${recipe.description || ''}`
           .replace(/,/g, '\\,')
           .replace(/;/g, '\\;')
           .replace(/\n/g, '\\n');
@@ -1316,15 +1397,26 @@ const MealPlanner = {
     });
 
     icsContent.push('END:VCALENDAR');
-    const icsString = icsContent.join('\r\n');
+    return icsContent.join('\r\n');
+  },
+
+  /**
+   * Generate and download an iCalendar (.ics) file for the generated meal plan.
+   * @private
+   */
+  _downloadCalendarICS() {
+    const icsString = this._buildCalendarICS();
+    if (!icsString) return;
 
     const blob = new Blob([icsString], { type: 'text/calendar;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
+    link.href = url;
     link.setAttribute('download', 'whats-for-dinner-meal-plan.ics');
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   },
 
   /**
@@ -1352,3 +1444,8 @@ const MealPlanner = {
     }
   }
 };
+
+if (typeof module !== 'undefined') {
+  module.exports = MealPlanner;
+}
+

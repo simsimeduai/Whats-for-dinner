@@ -311,13 +311,14 @@ const ShoppingList = {
       sectionItems.forEach(item => {
         const row = document.createElement('label');
         row.className = 'shopping-item-row' + (item.checked ? ' checked' : '');
+        const safeName = this._escapeHtml(item.name);
         const recipeText = item.fromRecipes.length > 0
-          ? `<span class="item-recipe-tag">from ${item.fromRecipes.join(', ')}</span>`
+          ? `<span class="item-recipe-tag">from ${this._escapeHtml(item.fromRecipes.join(', '))}</span>`
           : '';
         row.innerHTML = `
           <input type="checkbox" class="shopping-item-check" ${item.checked ? 'checked' : ''}
-            aria-label="Mark ${item.name} as in cart" />
-          <span class="item-name">${item.name}</span>
+            aria-label="Mark ${safeName} as in cart" />
+          <span class="item-name">${safeName}</span>
           ${recipeText}
         `;
         row.querySelector('.shopping-item-check').addEventListener('change', (e) => {
@@ -369,7 +370,7 @@ const ShoppingList = {
       if (sectionItems.length === 0) return;
       html += `<h3>${section}</h3><ul>`;
       sectionItems.forEach(item => {
-        html += `<li>${item.name}</li>`;
+        html += `<li>${this._escapeHtml(item.name)}</li>`;
       });
       html += `</ul>`;
     });
@@ -393,6 +394,20 @@ const ShoppingList = {
   /* ══════════════════════════════════════════════════════════════════════
      Private — Helpers
      ══════════════════════════════════════════════════════════════════════ */
+
+  /**
+   * Escape HTML special characters to prevent XSS in template strings.
+   * @param {string} str
+   * @returns {string}
+   */
+  _escapeHtml(str) {
+    return String(str ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  },
 
   /**
    * Get the store category for an ingredient.
@@ -432,3 +447,8 @@ const ShoppingList = {
     }
   }
 };
+
+if (typeof module !== 'undefined') {
+  module.exports = ShoppingList;
+}
+

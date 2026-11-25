@@ -1,7 +1,7 @@
 /**
  * OCR Engine Module
  *
- * Wraps Tesseract.js v6 (loaded via CDN) to provide receipt scanning
+ * Wraps Tesseract.js v5 (loaded via CDN) to provide receipt scanning
  * functionality for the meal planning app. Handles image preprocessing,
  * text recognition, and receipt text parsing into grocery item names.
  *
@@ -240,8 +240,9 @@ const OCREngine = {
       cleaned = cleaned.replace(/\s+\d+(\.\d+)?\s*(kg|g|gm|lt|l|ml|oz|lb|lbs|kb|bm)\b/i, '');
       cleaned = cleaned.replace(/\s+\d+(\.\d+)?(kg|g|gm|lt|l|ml|oz|lb|lbs|kb|bm)\b/i, '');
 
-      // Remove trailing standalone or paired letters representing receipt tax codes/noise (e.g. F, T, Py, ER, Rig, Py)
-      cleaned = cleaned.replace(/\s+[a-zA-Z]{1,3}\s*$/, '');
+      // Remove trailing single-letter receipt tax codes (e.g. F, T, N, X) or known 2-3 letter receipt/OCR noise tokens
+      // without stripping valid short food words like "oil", "tea", "egg", "pea", "ham", "yam", "pie", "mix"
+      cleaned = cleaned.replace(/\s+(?:[a-zA-Z]|tx|nt|ft|tf|fn|nf|py|er|rig|ea|ct|pk|pc|pcs|bx|bg|cs|dz|lb|lbs|oz|kg|gm|ml|lt|qty|reg|tax|net|wt)\s*$/i, '');
 
       return cleaned;
     });

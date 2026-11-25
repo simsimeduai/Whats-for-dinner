@@ -231,12 +231,16 @@ const GroceryInput = {
       this._showAutocomplete(query);
     });
 
-    // Close autocomplete on outside click
-    document.addEventListener('click', (e) => {
+    // Close autocomplete on outside click (clean up previous listener to prevent leaks)
+    if (this._outsideClickHandler) {
+      document.removeEventListener('click', this._outsideClickHandler);
+    }
+    this._outsideClickHandler = (e) => {
       if (!wrapper.contains(e.target)) {
         this._hideAutocomplete();
       }
-    });
+    };
+    document.addEventListener('click', this._outsideClickHandler);
 
     searchInput.focus();
   },
@@ -418,27 +422,29 @@ const GroceryInput = {
       row.className = 'ocr-item';
       row.innerHTML = `
         <input type="checkbox" checked data-index="${index}" class="ocr-checkbox">
-        <span class="ocr-item-name" contenteditable="true" data-index="${index}">${item}</span>
+        <span class="ocr-item-name" contenteditable="true" data-index="${index}">${this._escapeHtml(item)}</span>
       `;
       list.appendChild(row);
     });
 
-    // Confirm button
+    // Confirm button (assign onclick to avoid stacking duplicate listeners across scans)
     const confirmBtn = document.getElementById('btn-confirm-ocr');
-    confirmBtn.addEventListener('click', () => {
-      const checkedItems = list.querySelectorAll('.ocr-item');
-      checkedItems.forEach(row => {
-        const checkbox = row.querySelector('.ocr-checkbox');
-        const name = row.querySelector('.ocr-item-name');
-        if (checkbox.checked) {
-          this._addGrocery(name.textContent.trim());
-        }
-      });
+    if (confirmBtn) {
+      confirmBtn.onclick = () => {
+        const checkedItems = list.querySelectorAll('.ocr-item');
+        checkedItems.forEach(row => {
+          const checkbox = row.querySelector('.ocr-checkbox');
+          const name = row.querySelector('.ocr-item-name');
+          if (checkbox.checked) {
+            this._addGrocery(name.textContent.trim());
+          }
+        });
 
-      // Reset scan area
-      document.getElementById('ocr-results').classList.add('hidden');
-      document.getElementById('scan-dropzone').classList.remove('hidden');
-    });
+        // Reset scan area
+        document.getElementById('ocr-results').classList.add('hidden');
+        document.getElementById('scan-dropzone').classList.remove('hidden');
+      };
+    }
   },
 
   /**
@@ -581,27 +587,29 @@ const GroceryInput = {
       row.className = 'ocr-item';
       row.innerHTML = `
         <input type="checkbox" checked data-index="${index}" class="ocr-checkbox">
-        <span class="ocr-item-name">${item}</span>
+        <span class="ocr-item-name">${this._escapeHtml(item)}</span>
       `;
       list.appendChild(row);
     });
 
-    // Confirm button
+    // Confirm button (assign onclick to avoid stacking duplicate listeners across uploads)
     const confirmBtn = document.getElementById('btn-confirm-upload');
-    confirmBtn.addEventListener('click', () => {
-      const checkedItems = list.querySelectorAll('.ocr-item');
-      checkedItems.forEach(row => {
-        const checkbox = row.querySelector('.ocr-checkbox');
-        const name = row.querySelector('.ocr-item-name');
-        if (checkbox.checked) {
-          this._addGrocery(name.textContent.trim());
-        }
-      });
+    if (confirmBtn) {
+      confirmBtn.onclick = () => {
+        const checkedItems = list.querySelectorAll('.ocr-item');
+        checkedItems.forEach(row => {
+          const checkbox = row.querySelector('.ocr-checkbox');
+          const name = row.querySelector('.ocr-item-name');
+          if (checkbox.checked) {
+            this._addGrocery(name.textContent.trim());
+          }
+        });
 
-      // Reset upload area
-      results.classList.add('hidden');
-      dropzone.classList.remove('hidden');
-    });
+        // Reset upload area
+        results.classList.add('hidden');
+        dropzone.classList.remove('hidden');
+      };
+    }
   },
 
   /**
@@ -616,6 +624,7 @@ const GroceryInput = {
     if (this.groceries.includes(normalized)) return;
 
     this.groceries.push(normalized);
+    this._saveGroceries();
     this._renderGroceryList();
     this._updateSuggestionChips();
   },
@@ -626,6 +635,7 @@ const GroceryInput = {
    */
   _removeGrocery(index) {
     this.groceries.splice(index, 1);
+    this._saveGroceries();
     this._renderGroceryList();
     this._updateSuggestionChips();
   },
@@ -643,6 +653,9 @@ const GroceryInput = {
           <p class="empty-text">No items added yet</p>
         </div>
       `;
+      // Ensure unused audit section is cleared when list becomes empty
+      const existingUnused = document.getElementById('unused-audit-section');
+      if (existingUnused) existingUnused.remove();
       return;
     }
 
@@ -660,9 +673,10 @@ const GroceryInput = {
     this.groceries.forEach((item, index) => {
       const chip = document.createElement('span');
       chip.className = 'grocery-chip';
+      const safeItem = this._escapeHtml(item);
       chip.innerHTML = `
-        ${item}
-        <button class="chip-remove" data-index="${index}" aria-label="Remove ${item}">
+        ${safeItem}
+        <button class="chip-remove" data-index="${index}" aria-label="Remove ${safeItem}">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -684,6 +698,7 @@ const GroceryInput = {
 
     document.getElementById('btn-clear-all')?.addEventListener('click', () => {
       this.groceries = [];
+      this._saveGroceries();
       this._renderGroceryList();
       this._updateSuggestionChips();
     });
@@ -833,9 +848,10 @@ const GroceryInput = {
     this.pantryStaples.forEach((staple) => {
       const chip = document.createElement('span');
       chip.className = 'pantry-chip';
+      const safeStaple = this._escapeHtml(staple);
       chip.innerHTML = `
-        <span class="pantry-chip-label">${staple}</span>
-        <button class="pantry-chip-remove" aria-label="Remove ${staple} from pantry staples">
+        <span class="pantry-chip-label">${safeStaple}</span>
+        <button class="pantry-chip-remove" aria-label="Remove ${safeStaple} from pantry staples">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -998,22 +1014,23 @@ const GroceryInput = {
       card.className = 'unused-audit-card';
       card.dataset.item = item;
 
+      const safeItem = this._escapeHtml(item);
       const suggestions = this._findSimilarIngredients(item);
       const suggestionsHTML = suggestions.length > 0
-        ? `<p class="unused-suggestions-text">Did you mean: ${suggestions.map(s => `<button class="similar-suggestion-btn" data-suggest="${s}">${s}</button>`).join(' or ')}?</p>`
+        ? `<p class="unused-suggestions-text">Did you mean: ${suggestions.map(s => `<button class="similar-suggestion-btn" data-suggest="${this._escapeHtml(s)}">${this._escapeHtml(s)}</button>`).join(' or ')}?</p>`
         : '';
 
       card.innerHTML = `
         <div class="unused-card-main">
           <div class="unused-card-info">
-            <span class="unused-card-name">"${item}"</span>
+            <span class="unused-card-name">"${safeItem}"</span>
             <span class="unused-card-alert">No matching recipes found.</span>
           </div>
           ${suggestionsHTML}
           
           <div class="unused-actions-row">
             <div class="rename-input-group">
-              <input type="text" class="unused-rename-input" placeholder="Rename (e.g. bhindi, ladies finger...)" value="${item}" />
+              <input type="text" class="unused-rename-input" placeholder="Rename (e.g. bhindi, ladies finger...)" value="${safeItem}" />
               <button class="btn btn-secondary btn-sm btn-rename">Rename</button>
             </div>
             <button class="btn btn-primary btn-sm btn-toggle-custom-recipe">+ Add Custom Recipe</button>
@@ -1057,16 +1074,19 @@ const GroceryInput = {
 
   /** Helper to rename a grocery item. */
   _renameGroceryItem(oldName, newName) {
+    const normalizedNew = newName.toLowerCase().trim();
+    if (!normalizedNew) return;
     const idx = this.groceries.indexOf(oldName);
     if (idx >= 0) {
-      if (this.groceries.includes(newName)) {
+      if (this.groceries.includes(normalizedNew)) {
         this.groceries.splice(idx, 1);
       } else {
-        this.groceries[idx] = newName;
+        this.groceries[idx] = normalizedNew;
       }
+      this._saveGroceries();
       this._renderGroceryList();
       this._updateSuggestionChips();
-      if (typeof App !== 'undefined') App._showToast(`Renamed "${oldName}" to "${newName}"`, 'success');
+      if (typeof App !== 'undefined') App._showToast(`Renamed "${oldName}" to "${normalizedNew}"`, 'success');
     }
   },
 
@@ -1089,7 +1109,7 @@ const GroceryInput = {
 
     formContainer.innerHTML = `
       <div class="custom-recipe-form">
-        <h4 class="form-title">Add a Custom Recipe using "${ingredientName}"</h4>
+        <h4 class="form-title">Add a Custom Recipe using "${this._escapeHtml(ingredientName)}"</h4>
         <div class="form-group">
           <label>Recipe Name *</label>
           <input type="text" class="recipe-name-input" placeholder="e.g. Garlic Fried Okra" required />
@@ -1174,4 +1194,28 @@ const GroceryInput = {
       this._checkUnusedIngredients();
     });
   },
+
+  /** Persist groceries list to localStorage. */
+  _saveGroceries() {
+    try {
+      localStorage.setItem('wfd_groceries', JSON.stringify(this.groceries));
+    } catch (e) {
+      // Ignore storage errors
+    }
+  },
+
+  /** Escape HTML special characters for safe template interpolation. */
+  _escapeHtml(str) {
+    return String(str ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  },
 };
+
+if (typeof module !== 'undefined') {
+  module.exports = GroceryInput;
+}
+
