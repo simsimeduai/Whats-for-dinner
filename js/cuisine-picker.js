@@ -174,13 +174,16 @@ const CuisinePicker = {
       cards.forEach((card) => {
         if (allSelected) {
           card.classList.remove("selected");
+          card.setAttribute("aria-checked", "false");
         } else {
           card.classList.add("selected");
+          card.setAttribute("aria-checked", "true");
         }
       });
 
       toggleBtn.textContent = allSelected ? "Select All" : "Deselect All";
       this._updateCount();
+      this._saveSelectedCuisines();
     });
 
     container.appendChild(toggleBtn);
@@ -309,6 +312,7 @@ const CuisinePicker = {
       card.setAttribute("aria-checked", String(isSelected));
       this._updateCount();
       this._syncToggleLabel();
+      this._saveSelectedCuisines();
     });
 
     /* Keyboard support (Enter / Space) */
@@ -490,10 +494,12 @@ const CuisinePicker = {
         // Name row
         const nameRow = document.createElement('div');
         nameRow.className = 'profile-name-row';
+        const safeName = this._escapeHtml(profile.name);
+        const safeInitial = this._escapeHtml((profile.name || 'P').charAt(0).toUpperCase());
         nameRow.innerHTML = `
-          <span class="profile-avatar">${profile.name.charAt(0).toUpperCase()}</span>
-          <input type="text" class="profile-name-input" value="${profile.name}" placeholder="Name" aria-label="Person name" />
-          <button class="profile-remove-btn" aria-label="Remove ${profile.name}">
+          <span class="profile-avatar">${safeInitial}</span>
+          <input type="text" class="profile-name-input" value="${safeName}" placeholder="Name" aria-label="Person name" />
+          <button class="profile-remove-btn" aria-label="Remove ${safeName}">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>
         `;
@@ -612,11 +618,11 @@ const CuisinePicker = {
         const summaryText = mergedSummary || 'No Restrictions';
 
         capsule.innerHTML = `
-          <div class="capsule-avatar">${profile.name.charAt(0).toUpperCase()}</div>
+          <div class="capsule-avatar">${this._escapeHtml((profile.name || 'P').charAt(0).toUpperCase())}</div>
           <div class="capsule-details">
-            <span class="capsule-name">${profile.name}</span>
+            <span class="capsule-name">${this._escapeHtml(profile.name)}</span>
             <span class="capsule-divider">:</span>
-            <span class="capsule-summary">${summaryText}</span>
+            <span class="capsule-summary">${this._escapeHtml(summaryText)}</span>
           </div>
           <span class="capsule-edit-icon">✎</span>
         `;
@@ -652,9 +658,10 @@ const CuisinePicker = {
     profile.allergies.forEach(allergy => {
       const tag = document.createElement('span');
       tag.className = 'allergy-tag';
+      const safeAllergy = this._escapeHtml(allergy);
       tag.innerHTML = `
-        ${allergy}
-        <button class="allergy-tag-remove" aria-label="Remove ${allergy} allergy">
+        ${safeAllergy}
+        <button class="allergy-tag-remove" aria-label="Remove ${safeAllergy} allergy">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
       `;
@@ -665,6 +672,33 @@ const CuisinePicker = {
       });
       container.appendChild(tag);
     });
+  },
+
+  /**
+   * Persist selected cuisines to localStorage.
+   * @private
+   */
+  _saveSelectedCuisines() {
+    try {
+      localStorage.setItem('wfd_selected_cuisines', JSON.stringify(this.getSelected()));
+    } catch (e) {
+      // Ignore storage errors
+    }
+  },
+
+  /**
+   * Escape HTML special characters for safe interpolation.
+   * @private
+   * @param {string} str
+   * @returns {string}
+   */
+  _escapeHtml(str) {
+    return String(str ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   },
 
   /**
@@ -690,3 +724,8 @@ const CuisinePicker = {
     return { flags: [...flags], allergies: [...allergies] };
   }
 };
+
+if (typeof module !== 'undefined') {
+  module.exports = CuisinePicker;
+}
+

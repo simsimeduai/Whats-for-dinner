@@ -33,6 +33,7 @@ const App = {
 
   /** Boot the application. Called on DOMContentLoaded. */
   init() {
+    this._loadPersistedState();
     this._bindNavigation();
     if (typeof ShoppingList !== 'undefined') {
       ShoppingList.init();
@@ -40,6 +41,34 @@ const App = {
     this._renderStep(1);
     this._updateStepper();
     this._updateNavButtons();
+  },
+
+  /** Load persisted groceries and selected cuisines from localStorage. */
+  _loadPersistedState() {
+    try {
+      const savedGroceries = localStorage.getItem('wfd_groceries');
+      if (savedGroceries) {
+        const parsed = JSON.parse(savedGroceries);
+        if (Array.isArray(parsed)) this.groceries = parsed;
+      }
+      const savedCuisines = localStorage.getItem('wfd_selected_cuisines');
+      if (savedCuisines) {
+        const parsed = JSON.parse(savedCuisines);
+        if (Array.isArray(parsed)) this.selectedCuisines = parsed;
+      }
+    } catch (e) {
+      // Ignore storage errors
+    }
+  },
+
+  /** Persist groceries and selected cuisines to localStorage. */
+  _persistState() {
+    try {
+      localStorage.setItem('wfd_groceries', JSON.stringify(this.groceries));
+      localStorage.setItem('wfd_selected_cuisines', JSON.stringify(this.selectedCuisines));
+    } catch (e) {
+      // Ignore storage errors
+    }
   },
 
   /* ══════════════════════════════════════════════════════════════════════
@@ -103,10 +132,8 @@ const App = {
   _goToStep(step) {
     if (step < 1 || step > 3) return;
 
-    // Save state before leaving the current step
-    if (step > this.currentStep) {
-      this._saveCurrentStepState();
-    }
+    // Always save state before leaving the current step (both forward and backward)
+    this._saveCurrentStepState();
 
     const main = document.getElementById('app-main');
 
@@ -173,10 +200,12 @@ const App = {
       case 1:
         this.groceries = GroceryInput.getGroceries();
         this.pantryStaples = GroceryInput.getPantryStaples();
+        this._persistState();
         break;
       case 2:
         this.selectedCuisines = CuisinePicker.getSelected();
         this.profiles = CuisinePicker.getProfiles();
+        this._persistState();
         break;
       case 3:
         this.mealPlan = MealPlanner.currentPlan;
@@ -326,6 +355,13 @@ const App = {
 /* ════════════════════════════════════════════════════════════════════════
    Bootstrap
    ════════════════════════════════════════════════════════════════════════ */
-document.addEventListener('DOMContentLoaded', () => {
-  App.init();
-});
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', () => {
+    App.init();
+  });
+}
+
+if (typeof module !== 'undefined') {
+  module.exports = App;
+}
+

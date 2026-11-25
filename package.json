@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "npx serve -l 5000",
     "test": "jest",
-    "build": "rm -rf dist && mkdir dist && cp index.html dist/ && cp -r css dist/ && cp -r js dist/ && cp -r .github dist/.github || true",
+    "build": "rm -rf dist && mkdir dist && cp index.html dist/ && cp -r css js Pictures dist/",
     "deploy": "npm run build && npx gh-pages -d dist"
   },
   "author": "",

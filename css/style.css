@@ -1692,11 +1692,11 @@ input, textarea, select {
     display: none;
   }
 
-  .day-name {
+  .day-name-full {
     display: inline !important;
   }
 
-  .day-short {
+  .day-name-short {
     display: none !important;
   }
 

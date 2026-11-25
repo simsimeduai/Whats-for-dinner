@@ -1792,3 +1792,14 @@ const DEFAULT_PANTRY_STAPLES = [
   'oil', 'olive oil', 'butter', 'salt', 'black pepper', 'sugar', 'flour',
   'water', 'vinegar', 'garlic powder', 'onion powder'
 ];
+
+if (typeof module !== 'undefined') {
+  module.exports = {
+    RECIPES,
+    COMMON_GROCERIES,
+    INGREDIENT_CATEGORIES,
+    SWAP_REGISTRY,
+    DEFAULT_PANTRY_STAPLES
+  };
+}
+
